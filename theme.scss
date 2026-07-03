@@ -1,0 +1,92 @@
+/*-- scss:defaults --*/
+
+// Palette derived from the classic tournament chessboard:
+//   maple light square  #f0d9b5   -> page surfaces
+//   walnut dark square  #b58863   -> accents, rules, links
+//   ink                 #22201c   -> body text
+$body-bg: #fdfcf9;
+$body-color: #22201c;
+$link-color: #7a5230;
+$headings-color: #171512;
+
+$font-family-sans-serif: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+$font-family-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+$headings-font-family: $font-family-serif;
+$font-family-base: $font-family-serif;
+$font-size-root: 17px;
+
+$code-block-bg: #f6f1e7;
+$code-color: #5a4632;
+
+/*-- scss:rules --*/
+
+// Chapter headings carry a thin walnut rule — the "rank line" of the board.
+h1, h2 {
+  border-bottom: 1px solid #d9c4a5;
+  padding-bottom: 0.25rem;
+}
+
+h1.title {
+  border-bottom: 3px double #b58863;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.subtitle {
+  font-style: italic;
+  color: #6b6257;
+}
+
+// Signature element: an 8x8 board-corner motif before chapter numbers.
+.chapter-number::before {
+  content: "▖";
+  color: #b58863;
+  margin-right: 0.35rem;
+}
+
+// figures & tables — quiet, journal-like
+figure figcaption, .table caption {
+  font-family: "Hanken Grotesk", sans-serif;
+  font-size: 0.82rem;
+  color: #6b6257;
+}
+
+table {
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+thead {
+  border-top: 2px solid #22201c;
+  border-bottom: 1px solid #22201c;
+}
+
+tbody {
+  border-bottom: 2px solid #22201c;
+}
+
+blockquote {
+  border-left: 3px solid #b58863;
+  color: #4d453b;
+  background: #faf6ee;
+  padding: 0.4rem 1rem;
+}
+
+.sidebar nav[role="doc-toc"] a:hover,
+.sidebar .active {
+  color: #7a5230;
+}
+
+code {
+  background: #f6f1e7;
+}
+
+// keyboard focus visibility
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #7a5230;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

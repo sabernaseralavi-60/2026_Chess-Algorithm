@@ -1,0 +1,5 @@
+F1_Sphere        CA   mean=2.326e-05 std=1.899e-05  (7.8s)
+F1_Sphere        GA   mean=9.475e-02 std=5.399e-02  (2.8s)
+F1_Sphere        PSO  mean=8.455e-01 std=7.216e-01  (0.5s)
+F1_Sphere        SA   mean=1.013e+04 std=2.218e+03  (4.4s)
+F1_Sphere        GWO  mean=4.678e-31 std=8.194e-31  (1.1s)

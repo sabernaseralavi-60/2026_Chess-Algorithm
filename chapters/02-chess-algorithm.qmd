@@ -1,0 +1,154 @@
+# The Chess Algorithm {#sec-ca}
+
+## Conceptual mapping
+
+The Chess Algorithm (CA) treats a population of $N$ candidate solutions $\mathbf{X}_i \in \Omega \subset \mathbb{R}^D$ as pieces on a board, playing "toward" the global optimum. @tbl-mapping summarizes the correspondence between chess concepts and algorithmic mechanisms.
+
+| Chess concept | Algorithmic role |
+|---|---|
+| King | Incumbent best solution (never lost) |
+| Queen, Rook, Bishop, Knight, Pawn | Heterogeneous movement operators |
+| Development (opening principle) | Time-decaying step-scale $a(t)$ |
+| Sacrifice | Probabilistic acceptance of worse moves (minor pieces only) |
+| Pinning | Progressive freezing of coordinates to the King's values |
+| Castling | Safeguarded coordinate-block exchange King $\leftrightarrow$ Rook |
+| En passant | Opportunistic, self-adaptive local capture around the King |
+| Pawn promotion | Rank-based role reassignment each iteration |
+| Threefold repetition | Re-deployment of agents that collapse onto the King |
+| Checkmate | Termination criterion |
+
+: Mapping between chess concepts and CA mechanisms. {#tbl-mapping}
+
+Crucially, CA does not simulate the game of chess; it borrows the *strategic grammar* of chess as an inductive bias for search. The cost per iteration is $\mathcal{O}(N D)$ plus $N$ function evaluations, the same order as GA, PSO, or GWO.
+
+## Role assignment
+
+At every iteration the population is sorted by fitness, $f(\mathbf{X}_{(1)}) \le \dots \le f(\mathbf{X}_{(N)})$. The best agent is the **King** $\mathbf{K}$. The next ranks are assigned, in order, as **Queens** ($10\%$ of $N$), **Rooks** ($15\%$), **Bishops** ($15\%$), and **Knights** ($20\%$); the remainder are **Pawns**. Because assignment is repeated after every iteration, a Pawn that discovers a good region is automatically *promoted* to a stronger role — the chess promotion rule emerges from re-ranking without any extra machinery.
+
+## Development schedule
+
+Chess openings prescribe the rapid *development* of pieces; endgames demand precision. CA encodes this with a linearly decaying step-scale coefficient
+
+$$
+a(t) = 2\left(1 - \frac{t}{T}\right),
+$$ {#eq-development}
+
+where $t$ is the current iteration and $T$ the total budget, following the convention popularized by @mirjalili2014gwo. All piece moves scale with $a(t)$, producing broad exploration in the opening and fine exploitation in the endgame.
+
+## Piece movement operators
+
+Let $\mathbf{L} = \mathbf{u} - \mathbf{l}$ be the box width and $\mathbf{r}, \mathbf{r}' \sim \mathcal{U}(0,1)^D$ independent random vectors. Each role perturbs its agent as follows.
+
+**Queen (omnidirectional sweep).** The queen encircles the King at a radius proportional to her current gap from him:
+
+$$
+\mathbf{X}_i' = \mathbf{K} + a(t)\,(2\mathbf{r} - \mathbf{1}) \circ \max\!\big(|\mathbf{K} - \mathbf{X}_i|,\ \boldsymbol{\sigma}\big),
+$$ {#eq-queen}
+
+where $\circ$ is the elementwise product and $\boldsymbol{\sigma}$ is the King's adaptive capture radius (@sec-enpassant), which floors the sweep so queens never stall.
+
+**Rook (single-axis move).** A random axis $j$ is chosen and only that coordinate moves:
+
+$$
+X_{i,j}' = K_j + a(t)\,(2r - 1)\,\max\!\big(|K_j - X_{i,j}|,\ 0.01\,L_j\,a(t)\big).
+$$ {#eq-rook}
+
+**Bishop (diagonal move).** Two distinct axes $j, k$ move by steps of equal magnitude (and random relative sign), emulating diagonal motion:
+
+$$
+\Delta = a(t)\,(2r-1)\,\max\!\Big(\tfrac{1}{2}\big(|K_j - X_{i,j}| + |K_k - X_{i,k}|\big),\ 0.01\,L\,a(t)\Big), \quad
+X_{i,j}' = K_j + \Delta,\ \ X_{i,k}' = K_k \pm \Delta.
+$$ {#eq-bishop}
+
+**Knight (L-shaped jump).** The knight is the only piece that jumps *over* other pieces. Relative to a randomly chosen better-ranked peer $\mathbf{P}$, the knight drifts toward the peer and then adds a $2{:}1$ asymmetric jump on two random axes $j,k$:
+
+$$
+\mathbf{X}_i' = \mathbf{X}_i + \mathbf{r} \circ (\mathbf{P} - \mathbf{X}_i), \qquad
+X_{i,j}' \mathrel{+}= 2\,a(t)\,\beta\,(2r-1), \quad
+X_{i,k}' \mathrel{+}= 1\,a(t)\,\beta\,(2r'-1),
+$$ {#eq-knight}
+
+with $\beta = \overline{|\mathbf{P} - \mathbf{X}_i|}$ the mean coordinate gap. With small probability $0.1\,a(t)/2$ the knight instead performs an exploratory leap, resampling two coordinates uniformly in $\Omega$ — the algorithm's main long-range restart mechanism.
+
+**Pawn (steady advance).** Pawns move in small steps toward the King and toward a random better-ranked piece:
+
+$$
+\mathbf{X}_i' = \mathbf{X}_i + 0.3\,\mathbf{r} \circ (\mathbf{K} - \mathbf{X}_i) + 0.3\,\mathbf{r}' \circ (\mathbf{B} - \mathbf{X}_i).
+$$ {#eq-pawn}
+
+## Strategic mechanisms
+
+### Pinning
+
+With probability $p_{\text{pin}}(t) = 0.5\,t/T$, a random subset of at most $30\%$ of an agent's coordinates is *pinned* to the King's values and excluded from perturbation. Early in the run pinning is rare (free development); late in the run it concentrates the search on a shrinking set of free dimensions around the incumbent — an explicitly scheduled exploitation mechanism.
+
+### Sacrifice
+
+A worsening move $\Delta_i = f(\mathbf{X}_i') - f(\mathbf{X}_i) > 0$ by a **minor piece** (Knight or Pawn) is still accepted with probability
+
+$$
+p_{\text{acc}} = \exp\!\left(-\frac{\Delta_i}{\theta(t)}\right), \qquad
+\theta(t) = \theta_0 \big(f_{\max} - f_{\min}\big)\, e^{-8 t / T},
+$$ {#eq-sacrifice}
+
+with $\theta_0 = 0.1$. This is the Metropolis rule of Simulated Annealing [@kirkpatrick1983], but with two chess-motivated restrictions: (i) the temperature is scaled by the *current fitness spread* of the population, making the sacrifice budget self-calibrating across problems; and (ii) only minor pieces may be sacrificed — the King and the major pieces are never lost, preserving convergence of the elite.
+
+### En passant (adaptive local capture) {#sec-enpassant}
+
+At every iteration the King attempts an *en passant* capture: three trial points are drawn in a sparse Gaussian neighborhood,
+
+$$
+\mathbf{Y}_m = \mathbf{K} + \boldsymbol{\sigma} \circ \mathbf{z}_m \circ \mathbf{m}_m, \qquad
+\mathbf{z}_m \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),\quad m = 1,2,3,
+$$ {#eq-enpassant}
+
+where $\mathbf{m}_m$ is a random binary mask activating each coordinate with probability $\max(0.2,\ 2/D)$. Any improving trial replaces the King. The radius $\boldsymbol{\sigma}$ follows a success rule reminiscent of Evolution Strategies [@beyer2002]: it grows by a factor $1.3$ after a successful capture and shrinks by $0.92$ after a failure. After $50$ consecutive failures a *stalemate-avoidance* reset restores $\boldsymbol{\sigma} = 0.05\,\mathbf{L}\max(a(t), 0.05)$. This mechanism gives CA sustained endgame refinement without a separate local-search phase.
+
+### Castling
+
+Every $10$ iterations the King attempts *castling* with the best Rook: a contiguous block of up to $D/4$ coordinates is copied from the Rook into a candidate King. The exchange is kept **only if it improves the King** — a safeguarded structural jump that can splice together partial solutions discovered on different "files" of the board.
+
+### Threefold repetition (diversity preservation)
+
+If any agent coincides with the King to numerical precision (which pinning can cause), it is re-deployed uniformly in $\Omega$, exactly as the threefold-repetition rule prevents a game from cycling. This rule proved essential in development: without it, pinning can create exact clones of the King, all gap-proportional step sizes collapse to zero, and the search dies prematurely.
+
+### Checkmate
+
+The algorithm terminates after $T$ iterations. (A stagnation-based early stop is straightforward to add but is disabled in all experiments so every algorithm consumes an identical budget of $N \times T$ function evaluations.)
+
+## Pseudocode
+
+```
+Algorithm: Chess Algorithm (CA)
+Input: objective f, bounds [l, u], dimension D,
+       population N, iterations T
+1  Initialize X uniformly in [l, u]; evaluate F; sort; King ← X(1)
+2  σ ← 0.1 L; fails ← 0
+3  for t = 0 … T−1:
+4      a ← 2(1 − t/T);  p_pin ← 0.5 t/T;  θ ← 0.1 (F_max − F_min) e^(−8t/T)
+5      Assign roles by rank: Queens 10%, Rooks 15%, Bishops 15%,
+         Knights 20%, Pawns rest
+6      Move each piece by its operator (Eqs. Queen–Pawn)
+7      Pin ≤ 30% of coordinates of each agent to King with prob. p_pin
+8      Clip to bounds; evaluate F′
+9      Accept improvements; accept worse MINOR pieces with prob. e^(−Δ/θ)
+10     En passant: 3 masked Gaussian trials of radius σ around King;
+         keep any improvement; adapt σ (×1.3 success / ×0.92 fail;
+         stalemate reset after 50 fails)
+11     Every 10 iters: Castle — block-swap King↔best Rook, keep if better
+12     Threefold repetition: re-deploy agents identical to the King
+13     Update King; re-sort population (pawn promotion)
+14 return King
+```
+
+## Flowchart
+
+![Flowchart of the Chess Algorithm.](../figures/ca_flowchart.png){#fig-flowchart fig-align="center" width="88%"}
+
+## Properties and design rationale
+
+**Elitism and convergence.** The King is monotonically non-increasing in fitness: it is replaced only by strictly better points (population update, en passant, castling). CA therefore inherits the standard elitist convergence-in-probability argument of stochastic search: because the Knight's exploratory leap and the threefold-repetition rule assign positive probability density to any open subset of $\Omega$ at every iteration, the best-so-far value converges in probability to the global optimum as $T \to \infty$. As with all metaheuristics, this asymptotic guarantee says nothing about finite-budget performance, which is the subject of @sec-benchmarks.
+
+**Exploration–exploitation balance.** Exploration is carried by Knights (jumps and leaps) and early-schedule Queens; exploitation by Pawns, pinning, and the en passant success rule. The balance shifts smoothly via $a(t)$, $p_{\text{pin}}(t)$, and $\theta(t)$, and *adaptively* via the self-scaling of steps to current King–piece gaps and of $\theta$ to the population spread.
+
+**Parameter economy.** All experiments in this book use a single fixed configuration (role fractions $0.10/0.15/0.15/0.20$, castling period $10$, pin cap $0.30$, $\theta_0 = 0.1$); no per-problem tuning was performed. Sensitivity analysis of these fractions is left as future work.
