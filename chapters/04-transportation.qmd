@@ -1,0 +1,80 @@
+# Transportation Application: Arterial Signal Coordination {#sec-transport}
+
+## Problem statement
+
+Coordinated fixed-time signal timing along urban arterials is a canonical transportation network optimization problem: the objective surface is multimodal (offset combinations create many locally good "green waves"), the variables are heterogeneous (a common cycle, per-intersection splits, and offsets), and the delay model is nonlinear and non-differentiable in practice [@ceylan2004; @roess2019]. It is therefore a natural first engineering test for CA.
+
+We consider an eight-intersection arterial with intersection spacings of $450, 380, 520, 300, 610, 420,$ and $350$ m and a progression speed of $50$ km/h, carrying near-saturation two-way traffic (eastbound approach demands between roughly $1{,}240$ and $1{,}400$ veh/h) with conflicting cross-street demands at each junction. Each intersection operates a two-phase plan.
+
+![Layout of the eight-intersection arterial test bed.](../figures/traffic_network.png){#fig-network fig-align="center" width="100%"}
+
+## Optimization model
+
+The decision vector is
+
+$$
+\mathbf{z} = \big(C,\ g_1, \dots, g_8,\ o_2, \dots, o_8\big) \in \mathbb{R}^{16},
+$$ {#eq-decision}
+
+with common cycle length $C \in [60, 140]$ s, arterial green splits $g_i \in [0.30, 0.75]$, and offsets $o_i$ expressed as fractions of the cycle (intersection 1 is the reference). The objective is total network delay (veh·h/h), composed of:
+
+**Uniform delay** per approach from Webster's first term [@webster1958],
+
+$$
+d_1 = \frac{C\,(1 - g)^2}{2\,\big(1 - \min(1, x)\, g\big)},
+$$ {#eq-webster}
+
+where $g$ is the effective green ratio and $x = v/c$ the volume-to-capacity ratio;
+
+**Overflow delay** from the HCM time-dependent formulation [@roess2019],
+
+$$
+d_2 = 900\,T_a \left[ (x - 1) + \sqrt{(x-1)^2 + \frac{8\,k\,I\,x}{c\,T_a}} \right],
+$$ {#eq-hcm}
+
+with analysis period $T_a = 0.25$ h, incremental delay factor $k = 0.5$, and upstream filtering factor $I = 1$; and
+
+**Progression adjustment**: platoons arriving from the upstream intersection are shifted by the offset difference minus travel time; the mismatch between platoon arrival and the local green window scales the uniform delay up or down for each direction. Because the arterial carries both eastbound and westbound platoons, offsets that perfect one direction degrade the other — the classical source of multimodality in coordination problems.
+
+Cross-street phases receive $1 - g_i$ (minus lost time, $4$ s per phase) and contribute their own delay, so excessive arterial splits are penalized through cross-street oversaturation. All terms are summed over the sixteen arterial approaches and eight cross-street approaches.
+
+## Experimental setup
+
+CA, GA, PSO, and GWO (the three strongest baselines from @sec-benchmarks) are run with $N = 30$, $T = 300$ iterations ($9{,}000$ evaluations), and $30$ independent runs each, with no per-algorithm tuning. SA is omitted after its uncompetitive benchmark performance.
+
+## Results
+
+{{< include ../results/table_traffic.md >}}
+
+: Final total delay over 30 runs (best mean in bold). {#tbl-traffic}
+
+{{< include ../results/table_traffic_wilcoxon.md >}}
+
+: Wilcoxon rank-sum tests on the signal timing problem. {#tbl-traffic-wilcoxon}
+
+![Median convergence on the arterial signal timing problem.](../figures/traffic_convergence.png){#fig-traffic-conv fig-align="center" width="90%"}
+
+![Distribution of final delays over 30 runs.](../figures/traffic_boxplot.png){#fig-traffic-box fig-align="center" width="80%"}
+
+Four observations follow:
+
+1. **All four algorithms land within $\sim 1\%$ of one another in mean delay** (169.5–171.2 veh·h/h), and no pairwise difference involving CA is statistically significant ($p > 0.07$ throughout, @tbl-traffic-wilcoxon). On this problem class, CA is statistically indistinguishable from GA, PSO, and GWO.
+2. **CA attains the best solution found by any method** (166.526 veh·h/h, matched by GA and PSO), indicating that its search operators are capable of locating the same high-quality coordination plan as the strongest baselines.
+3. **The benchmark ranking does not carry over.** GWO, dominant on the classical suite of @sec-benchmarks, holds no advantage here — a concrete illustration of the No-Free-Lunch principle [@wolpert1997] and a caution against extrapolating benchmark superiority to engineering practice.
+4. **Interpretation with restraint.** We do *not* claim CA is superior on this problem; the honest claim is *parity with the state of the practice* on a realistic coordination instance, achieved by a first-generation algorithm with default parameters.
+
+## The best coordination plan found
+
+The best plan discovered (by CA) selects the minimum cycle $C = 60$ s — sensible under Webster's guidance when splits can be kept efficient — with the following timings:
+
+{{< include ../results/best_ca_plan.md >}}
+
+: Best signal timing plan found (CA). {#tbl-plan}
+
+![Time–space representation of the best plan found by CA.](../figures/traffic_best_plan.png){#fig-plan fig-align="center" width="100%"}
+
+The offsets form a coherent progression pattern in which consecutive intersections alternate between serving the eastbound and westbound platoons — the compromise structure expected on a heavily loaded two-way arterial.
+
+## Practical remarks
+
+For a transportation agency, the operational message is that CA can be deployed on signal-coordination studies with confidence comparable to GA or PSO, while offering two features that practitioners may find attractive: (i) the sacrifice mechanism gives a principled way to escape poor offset basins without restarting, and (ii) the en-passant refinement polishes splits and offsets to fine precision late in the run without a separate local-search stage. Extension to cycle-by-cycle stochastic simulation objectives (e.g., VISSIM- or SUMO-in-the-loop) is mechanically straightforward since CA requires only function values.

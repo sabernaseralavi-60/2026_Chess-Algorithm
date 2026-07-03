@@ -1,0 +1,45 @@
+# Preface {.unnumbered}
+
+::: {.callout-note appearance="simple" icon=false}
+**The Chess Algorithm: A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering**
+
+Seyed Saber Naseralavi^1,\*^ and Seyedali Mirjalili^2,†^
+
+^1^ Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran
+
+^2^ Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia
+
+^\*^ Corresponding author: `saber_naseralavi@uk.ac.ir`
+
+^†^ *Invited co-author; participation pending confirmation. Dr. Mirjalili has been invited to join this work as a co-author in recognition of the strong methodological lineage of this study with his contributions to swarm and nature-inspired optimization. His name will be retained only upon his explicit consent.*
+:::
+
+## Abstract {.unnumbered}
+
+This monograph introduces the **Chess Algorithm (CA)**, a novel population-based metaheuristic inspired by the strategic and tactical structure of the game of chess. Unlike swarm-based methods in which all agents obey identical update rules, CA assigns heterogeneous *roles* to members of the population — King, Queens, Rooks, Bishops, Knights, and Pawns — each with a movement operator abstracted from the geometry of the corresponding chess piece. Strategic concepts from chess theory are formalized as algorithmic mechanisms: *development* governs the exploration–exploitation schedule, *sacrifice* provides a controlled acceptance of deteriorating moves in the spirit of simulated annealing, *pinning* progressively freezes decision variables around the incumbent solution, *castling* enables a safeguarded structural exchange between the best solution and long-range agents, the *en passant* rule implements an opportunistic self-adaptive local search, and a *threefold-repetition* rule injects diversity whenever the population collapses onto the incumbent.
+
+The algorithm is evaluated on six standard benchmark functions (Sphere, Rosenbrock, Rastrigin, Griewank, Ackley, and Schwefel 2.22) in 30 dimensions against four established metaheuristics — the Genetic Algorithm (GA), Particle Swarm Optimization (PSO), Simulated Annealing (SA), and the Grey Wolf Optimizer (GWO) — under an identical function-evaluation budget across 30 independent runs, with one-way ANOVA and Wilcoxon rank-sum tests. CA significantly outperforms GA, PSO, and SA on the majority of the benchmark suite and remains statistically competitive with GA on Rosenbrock and Rastrigin, while GWO retains an advantage on several classical unimodal and multimodal functions. The practical value of CA is then examined in a transportation network engineering case study: the coordinated fixed-time signal timing of an eight-intersection urban arterial, formulated over cycle length, green splits, and offsets with a Webster/HCM-based time-dependent delay model. On this constrained, multimodal engineering problem, CA attains the best-known solution found by any competitor and is statistically indistinguishable from GA, PSO, and GWO, demonstrating that the proposed method is a credible and competitive addition to the toolbox of transportation network optimization.
+
+All source code, experiment scripts, results, and this book are openly available in the accompanying repository, in the interest of full reproducibility.
+
+**Keywords:** metaheuristics; chess algorithm; global optimization; benchmark functions; traffic signal timing; transportation networks; arterial coordination.
+
+## About the corresponding author {.unnumbered}
+
+::: {.column-margin}
+![Seyed Saber Naseralavi](assets/author_photo.jpg){width=180}
+:::
+
+**Seyed Saber Naseralavi** is an Assistant Professor in the Department of Civil Engineering at Shahid Bahonar University of Kerman, Iran. He received his B.Sc. in Civil Engineering from Shahid Bahonar University of Kerman (2004), his M.Sc. in Highway and Transportation Engineering from Iran University of Science and Technology (2006), and his Ph.D. in Highway and Transportation Engineering from Tarbiat Modares University (2011), where he graduated first in his doctoral cohort at the Faculty of Civil and Environmental Engineering. His research spans traffic safety modeling and surrogate safety measures, traffic flow theory and simulation, travel behavior, machine learning applications in transportation, and metaheuristic optimization for transportation network design. He has authored over 50 refereed journal articles and 80 conference papers, supervised numerous graduate theses, and serves as a reviewer for several international journals. A provincial chess champion in his youth — first place in the under-12 and under-14 tournaments of Kerman province — he brings to this work a lifelong familiarity with the strategic structure of the game that inspired the proposed algorithm.
+
+## Reproducibility {.unnumbered}
+
+Every figure and table in this book is generated from committed scripts:
+
+```bash
+python src/run_benchmarks.py      # benchmark experiments (~ minutes)
+python src/traffic_case_study.py  # arterial signal timing case study
+quarto render                     # build HTML + PDF
+```
+
+Random seeds are fixed in the scripts; results in this book correspond to the committed outputs in `results/` and `figures/`.

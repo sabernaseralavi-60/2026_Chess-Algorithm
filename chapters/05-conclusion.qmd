@@ -1,0 +1,23 @@
+# Conclusions and Future Work
+
+## Summary of findings
+
+This monograph introduced the Chess Algorithm (CA), a population-based metaheuristic whose defining feature is a *heterogeneous-role architecture*: agents are dynamically assigned as Queens, Rooks, Bishops, Knights, and Pawns around an elite King, each with a movement operator abstracted from the geometry of the corresponding chess piece, and the search is governed by five strategic mechanisms translated from chess theory — development, sacrifice, pinning, castling, and en passant — plus a threefold-repetition diversity rule.
+
+The empirical findings, stated with the restraint they deserve:
+
+1. On six classical 30-dimensional benchmarks under identical evaluation budgets, **CA significantly outperforms GA, PSO, and SA on the majority of the suite** (all six functions against PSO and SA; four of six against GA, with statistical parity on Rosenbrock and Rastrigin).
+2. **GWO remains significantly stronger than CA on the classical suite.** We regard this as an accurate placement of a first-generation algorithm rather than a defect to be argued away.
+3. On the eight-intersection arterial signal coordination problem, **CA is statistically indistinguishable from GA, PSO, and GWO and attains the best solution found by any method** — parity with the state of the practice on the engineering problem class that motivated the work.
+
+## Limitations
+
+We note the boundaries of the evidence honestly. The benchmark suite, while standard, is limited to six functions at a single dimensionality; CEC composition suites and scalability studies (50–100 D) remain to be run. The transportation study uses an analytical Webster/HCM delay model rather than microsimulation, and a single arterial instance. CA's parameters (role fractions, castling period, pinning cap, $\theta_0$) were fixed a priori; their sensitivity is unquantified. Finally, per-iteration wall-clock cost, while of the same order as the baselines, was not the object of optimization.
+
+## Future work
+
+Natural next steps include: (i) binary, discrete, and multi-objective variants of CA (a Pareto "King's court" of nondominated solutions is a natural extension of the role architecture); (ii) hybridization, e.g., replacing the pawn operator with differential-evolution mutation; (iii) theoretical analysis of the en-passant success rule as a $(1+\lambda)$-ES embedded in a population method; (iv) larger transportation applications — network-wide signal optimization, transit network design, and simulation-based optimization [@osorio2013]; and (v) systematic parameter sensitivity and component ablation studies to quantify the marginal contribution of each chess mechanism.
+
+## Closing remark
+
+Chess players are taught that the quality of a move is judged not by its immediate material consequence but by the position it creates. The same standard should apply to new metaheuristics: the value of CA will be determined not by its placement on any single benchmark table but by whether its heterogeneous-role architecture opens useful positions for the optimization problems of transportation engineering. The evidence assembled here suggests the opening, at least, has been played soundly.

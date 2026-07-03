@@ -1,0 +1,43 @@
+# Introduction
+
+## Motivation
+
+Many decision problems in engineering — and in transportation network engineering in particular — are formally *global optimization* problems of the form
+
+$$
+\min_{\mathbf{x} \in \Omega} f(\mathbf{x}), \qquad
+\Omega = \{\mathbf{x} \in \mathbb{R}^{D} : l_j \le x_j \le u_j,\; j = 1,\dots,D\},
+$$ {#eq-problem}
+
+where the objective $f$ is typically non-convex, non-differentiable, multimodal, and expensive to evaluate. Signal timing coordination, network design, transit scheduling, and detector placement all exhibit these pathologies [@ceylan2004; @osorio2013]. Exact methods are rarely tractable at realistic scale, which explains the sustained popularity of *metaheuristics*: stochastic search frameworks that trade guarantees of optimality for robustness, generality, and an acceptable computational budget.
+
+## A brief map of the metaheuristic landscape
+
+The modern field traces back to evolutionary computation — the Genetic Algorithm of @holland1975, popularized by @goldberg1989, and Evolution Strategies [@beyer2002] — and to trajectory methods such as Simulated Annealing [@kirkpatrick1983], which introduced the influential idea of *probabilistically accepting worse solutions* to escape local minima. The 1990s and 2000s brought swarm intelligence: Particle Swarm Optimization [@kennedy1995], Ant Colony Optimization [@dorigo1996], Differential Evolution [@storn1997], and the Artificial Bee Colony [@karaboga2007]. More recently, a productive line of research initiated largely by Mirjalili and colleagues has abstracted the social and hunting behavior of animals into simple, effective operators: the Grey Wolf Optimizer [@mirjalili2014gwo], Ant Lion Optimizer [@mirjalili2015alo], Dragonfly Algorithm [@mirjalili2016da], Whale Optimization Algorithm [@mirjalili2016woa], Sine Cosine Algorithm [@mirjalili2016sca], and Salp Swarm Algorithm [@mirjalili2017ssa], among others.
+
+Two structural observations motivate the present work:
+
+1. **Homogeneity of agents.** In most swarm algorithms every agent obeys the same update equation, differentiated only by its position and (implicitly) its fitness. Yet many successful search strategies in nature and in human games rely on a *division of labor* among heterogeneous agents.
+2. **Scheduling of exploration and exploitation.** Nearly all competitive metaheuristics succeed or fail on the quality of their exploration–exploitation transition [@mirjalili2014gwo]. Mechanisms that adapt this transition to the observed state of the search — rather than only to elapsed time — remain comparatively rare.
+
+The No-Free-Lunch theorem [@wolpert1997] guarantees that no single optimizer dominates over all problems, which is the standard and, we believe, honest justification for proposing new metaheuristics: the goal is not universal superiority but a *different inductive bias* that proves useful on relevant problem classes.
+
+## Why chess?
+
+Chess is arguably the most deeply analyzed strategy system devised by humans, and it offers precisely the two ingredients identified above:
+
+- **Heterogeneous roles.** The pieces differ radically in mobility and function — the queen sweeps the board, rooks move along orthogonal lines, bishops along diagonals, knights jump over obstacles, and pawns advance slowly but define the positional structure. This suggests a population in which sub-groups perform qualitatively different search moves around a common reference (the King, i.e., the incumbent best solution).
+- **A mature strategic vocabulary.** Concepts such as *development* (mobilize forces early, consolidate later), *sacrifice* (accept a material loss for positional gain), *pinning* (immobilize a piece against a more valuable one), *castling* (a safeguarded structural rearrangement), *en passant* (an opportunistic capture available only under specific conditions), and the *threefold-repetition* rule (a draw is declared when the position repeats) translate naturally into exploration schedules, deteriorating-move acceptance, variable fixation, elite restructuring, adaptive local search, and diversity preservation, respectively.
+
+The Chess Algorithm (CA) proposed in this book formalizes this mapping. We emphasize that CA borrows the *strategic logic* of chess rather than simulating the game itself; no game tree is searched, and the computational cost per iteration is comparable to that of GA or PSO.
+
+## Contributions and scope
+
+The contributions of this monograph are:
+
+1. A complete mathematical specification of the Chess Algorithm, including role assignment, six piece-movement operators, and five strategic mechanisms (development, sacrifice, pinning, castling, en passant) plus a threefold-repetition diversity rule (@sec-ca).
+2. A controlled benchmark study on six standard test functions in 30 dimensions against GA, PSO, SA, and GWO under an identical evaluation budget, with nonparametric statistical testing following the recommendations of @derrac2011 (@sec-benchmarks).
+3. A transportation engineering case study — coordinated fixed-time signal timing of an eight-intersection arterial with a Webster/HCM time-dependent delay model [@webster1958; @roess2019] — demonstrating that CA is competitive with established methods on a realistic, constrained, multimodal problem (@sec-transport).
+4. A fully reproducible open-source implementation.
+
+Throughout, we report results with deliberate restraint. CA is *not* claimed to dominate all competitors; in particular, GWO remains stronger on several classical benchmarks. The claim defended here is narrower and, we hope, more credible: CA is a well-founded, novel, and competitive metaheuristic whose heterogeneous-role architecture is a useful addition to the field, and it performs on par with the best available methods on the transportation application that motivated it.

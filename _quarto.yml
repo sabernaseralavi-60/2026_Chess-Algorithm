@@ -1,0 +1,65 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "The Chess Algorithm"
+  subtitle: "A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering"
+  author:
+    - name: "Seyed Saber Naseralavi"
+      affiliation: "Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran"
+      corresponding: true
+    - name: "Seyedali Mirjalili (invited co-author — participation pending)"
+      affiliation: "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia"
+  date: "2026-07-03"
+  repo-url: https://github.com/sabernaseralavi-60/2026_Chess-Algorithm
+  repo-actions: [source, issue]
+  chapters:
+    - index.qmd
+    - chapters/01-introduction.qmd
+    - chapters/02-chess-algorithm.qmd
+    - chapters/03-benchmarks.qmd
+    - chapters/04-transportation.qmd
+    - chapters/05-conclusion.qmd
+    - chapters/06-references.qmd
+  sidebar:
+    style: floating
+    background: "#faf8f4"
+
+bibliography: references.bib
+csl: https://www.zotero.org/styles/apa
+
+execute:
+  enabled: false
+  freeze: true
+
+format:
+  html:
+    theme:
+      - cosmo
+      - theme.scss
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    fig-align: center
+    link-external-newwindow: true
+  pdf:
+    documentclass: scrbook
+    classoption: [oneside]
+    papersize: a4
+    toc: true
+    number-sections: true
+    colorlinks: true
+    linkcolor: "chessdark"
+    citecolor: "chessdark"
+    urlcolor: "chessdark"
+    geometry:
+      - margin=2.6cm
+    include-in-header:
+      text: |
+        \usepackage{xcolor}
+        \definecolor{chessdark}{HTML}{7a5230}
+        \usepackage{microtype}
+        \usepackage{booktabs}

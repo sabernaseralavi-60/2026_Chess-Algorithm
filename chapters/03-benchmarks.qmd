@@ -1,0 +1,60 @@
+# Benchmark Experiments {#sec-benchmarks}
+
+## Experimental protocol
+
+CA is compared against four widely used metaheuristics: the real-coded Genetic Algorithm (GA) with tournament selection, BLX-$\alpha$ crossover, Gaussian mutation, and elitism [@holland1975; @goldberg1989]; Particle Swarm Optimization (PSO) with linearly decreasing inertia [@kennedy1995]; Simulated Annealing (SA) [@kirkpatrick1983] granted a population-equivalent evaluation budget; and the Grey Wolf Optimizer (GWO) [@mirjalili2014gwo].
+
+The test suite comprises six standard functions spanning unimodal, ill-conditioned, and highly multimodal landscapes:
+
+| Function | Type | Search domain | $f^\*$ |
+|---|---|---|---:|
+| F1 Sphere | Unimodal | $[-100, 100]^{30}$ | 0 |
+| F2 Rosenbrock | Unimodal, ill-conditioned valley | $[-30, 30]^{30}$ | 0 |
+| F3 Rastrigin | Multimodal | $[-5.12, 5.12]^{30}$ | 0 |
+| F4 Griewank | Multimodal | $[-600, 600]^{30}$ | 0 |
+| F5 Ackley | Multimodal | $[-32, 32]^{30}$ | 0 |
+| F6 Schwefel 2.22 | Unimodal, non-separable norm | $[-10, 10]^{30}$ | 0 |
+
+: Benchmark functions ($D = 30$). {#tbl-suite}
+
+All algorithms use a population of $N = 30$, $T = 500$ iterations, and therefore an identical budget of $15{,}000$ function evaluations per run (CA's en-passant and castling probes are included in its accounting by design of the shared interface). Each algorithm–function pair is repeated for $30$ independent runs with distinct seeds. No per-problem parameter tuning was performed for any algorithm, including CA.
+
+Statistical analysis follows @derrac2011: one-way ANOVA to establish that the algorithm factor matters, and pairwise two-sided Wilcoxon rank-sum tests (CA versus each competitor) at $\alpha = 0.05$, which do not assume normality of final-error distributions.
+
+## Descriptive results
+
+{{< include ../results/table_stats.md >}}
+
+: Mean, standard deviation, best, and worst final objective values over 30 runs (best mean per function in bold). {#tbl-stats tbl-colwidths="[18,12,18,18,17,17]"}
+
+## Convergence behavior
+
+@fig-convergence shows the median best-so-far curves. Three patterns are visible. First, CA descends steadily throughout the run on F1, F4, and F6: the en-passant success rule keeps producing improvements deep into the endgame, where GA and PSO have long stagnated. Second, on the ill-conditioned Rosenbrock valley (F2) all population methods slow dramatically, with CA and GA tracking each other closely. Third, GWO exhibits its well-documented strength on this classical suite, converging fastest and deepest on F1, F5, and F6.
+
+![Median convergence curves (30 runs, semi-log scale).](../figures/convergence_all.png){#fig-convergence fig-align="center" width="100%"}
+
+![Distribution of final objective values over 30 runs.](../figures/boxplots_all.png){#fig-boxplots fig-align="center" width="100%"}
+
+## Statistical tests
+
+One-way ANOVA confirms highly significant between-algorithm differences on every function:
+
+{{< include ../results/table_anova.md >}}
+
+: One-way ANOVA over the five algorithms, per function. {#tbl-anova}
+
+Pairwise Wilcoxon rank-sum tests give the sharper picture:
+
+{{< include ../results/table_wilcoxon.md >}}
+
+: Wilcoxon rank-sum tests, CA versus each competitor ($\alpha = 0.05$). {#tbl-wilcoxon}
+
+## Discussion
+
+The evidence supports a differentiated, honest reading:
+
+- **CA versus GA, PSO, and SA.** CA is significantly better than PSO and SA on *all six* functions, and significantly better than GA on four of six (Sphere, Griewank, Schwefel 2.22 by several orders of magnitude in mean error; Ackley favors GA on the mean owing to a few CA runs trapped on a plateau, although CA's median error, $\sim 10^{-3}$, is an order of magnitude below GA's). On Rosenbrock and Rastrigin, CA and GA are statistically indistinguishable.
+- **CA versus GWO.** GWO is significantly better on all six classical benchmarks, consistent with its known aggressive exploitation on this suite [@mirjalili2014gwo]. We report this plainly: on standard unconstrained test functions, CA does not overtake GWO.
+- **No free lunch.** These results are exactly the situation anticipated by @wolpert1997: rankings are problem-dependent. The practical question for a transportation engineer is not whether CA wins on Sphere, but whether it is competitive on structured engineering problems — the subject of @sec-transport, where the ranking changes and CA matches or exceeds all competitors, including GWO.
+
+In summary, CA clearly dominates three of the four established baselines on the majority of the suite while remaining behind GWO on classical benchmarks — a profile typical of a young algorithm with a distinctive inductive bias rather than a tuned benchmark specialist.
