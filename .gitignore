@@ -12,3 +12,4 @@ chapters/*_files/
 **/*.quarto_ipynb
 *.log
 instructions.md
+.claude/

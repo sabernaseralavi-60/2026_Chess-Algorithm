@@ -506,7 +506,7 @@ $$
 
 # دسترسی به داده‌ها و کد {.unnumbered}
 
-تمام کدهای منبع، اسکریپت‌های آزمایش، نتایج و فایل‌های منبع مقاله در [github.com/sabernaseralavi-60/2026_Chess-Algorithm](https://github.com/sabernaseralavi-60/2026_Chess-Algorithm) در دسترس‌اند؛ مقالهٔ رندرشده در [sabernaseralavi-60.github.io/2026_Chess-Algorithm](https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/) قرار دارد، PDF در `paper.pdf` و نسخهٔ فارسی Word در `paper-fa.docx`. همهٔ شکل‌ها و جدول‌های مقاله با اسکریپت‌های ثبت‌شده تولید می‌شوند:
+تمام کدهای منبع، اسکریپت‌های آزمایش، نتایج و فایل‌های منبع مقاله در [github.com/sabernaseralavi-60/2026_Chess-Algorithm](https://github.com/sabernaseralavi-60/2026_Chess-Algorithm) در دسترس‌اند؛ مقالهٔ رندرشده در [sabernaseralavi-60.github.io/2026_Chess-Algorithm](https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/) قرار دارد و PDF در `paper.pdf` است. فایل منبع همین نسخهٔ فارسی (`paper-fa.qmd`) در مخزن موجود است و به‌صورت محلی با Quarto به Word تبدیل می‌شود. همهٔ شکل‌ها و جدول‌های مقاله با اسکریپت‌های ثبت‌شده تولید می‌شوند:
 
 ```bash
 python src/run_benchmarks.py      # آزمایش‌های محک

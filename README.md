@@ -11,9 +11,10 @@ Seyedali Mirjalili (Torrens University Australia) — *invited co-author; partic
 |---|---|---|
 | HTML article (English) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>** | `_article/index.html` |
 | PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
-| Word manuscript (Persian, RTL) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper-fa.docx>** | `_article/paper-fa.docx` |
 
 The online copies are published to GitHub Pages from the `gh-pages` branch via `quarto publish gh-pages`. To rebuild locally, run `quarto render` (outputs land in `_article/`).
+
+A Persian (RTL) Word translation can be built locally from `paper-fa.qmd` (`quarto render paper-fa.qmd --to docx`); it is kept as a local-only build and is not published online.
 
 ## What is this?
 
