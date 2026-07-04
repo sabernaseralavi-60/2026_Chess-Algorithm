@@ -1,8 +1,14 @@
 _book/
+_article/
+_freeze/
 .quarto/
+/.quarto/
 /.luarc.json
 __pycache__/
 *.pyc
 .DS_Store
 index_files/
 chapters/*_files/
+**/*.quarto_ipynb
+*.log
+instructions.md

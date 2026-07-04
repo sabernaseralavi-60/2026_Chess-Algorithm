@@ -21,6 +21,8 @@ function-evaluation budget of pop * iters for every algorithm.
 Author: Chess Algorithm (CA) research project
 """
 
+import math
+
 import numpy as np
 
 
@@ -28,11 +30,29 @@ import numpy as np
 # Utility
 # ----------------------------------------------------------------------
 def _init_population(lb, ub, dim, pop, rng):
+    """Uniform initialization X_i = l + (u - l) ∘ r_i,  r_i ~ U(0,1)^D."""
     return lb + (ub - lb) * rng.random((pop, dim))
 
 
 def _clip(X, lb, ub):
     return np.clip(X, lb, ub)
+
+
+def _levy_step(rng, beta=1.5):
+    """One-dimensional Levy-stable step via Mantegna's algorithm.
+
+    step = u / |v|^(1/beta),  u ~ N(0, sigma_u^2),  v ~ N(0, 1),
+
+    with the scale sigma_u chosen so that the step distribution has the
+    heavy-tailed index `beta` (Mantegna, 1994). Used by the optional
+    Levy-flight variant of the Knight's exploratory leap.
+    """
+    sigma_u = (math.gamma(1.0 + beta) * math.sin(math.pi * beta / 2.0)
+               / (math.gamma((1.0 + beta) / 2.0) * beta
+                  * 2.0 ** ((beta - 1.0) / 2.0))) ** (1.0 / beta)
+    u = sigma_u * rng.standard_normal()
+    v = rng.standard_normal()
+    return u / abs(v) ** (1.0 / beta)
 
 
 # ======================================================================
@@ -41,9 +61,28 @@ def _clip(X, lb, ub):
 def chess_algorithm(fun, lb, ub, dim, pop, iters, rng,
                     frac_queen=0.10, frac_rook=0.15, frac_bishop=0.15,
                     frac_knight=0.20, castling_period=10,
-                    pin_max=0.30, theta0=0.1, track_roles=False):
+                    pin_max=0.30, theta0=0.1, knight_leap="uniform",
+                    track_roles=False):
     """
     Chess Algorithm (CA).
+
+    Evaluation accounting
+    ---------------------
+    Per iteration CA evaluates the `pop` piece moves plus 3 en-passant
+    probes, one castling probe every `castling_period` iterations, and
+    re-evaluations of re-deployed duplicates (rare). Over T iterations
+    this is ~= pop*T * (1 + 3/pop) function evaluations, i.e. about 10%
+    more than the pop*T core budget of the baselines for pop = 30. This
+    overhead is reported transparently in the accompanying paper.
+
+    Parameters (chess-specific)
+    ---------------------------
+    knight_leap : {"uniform", "levy"}
+        Distribution of the Knight's occasional exploratory leap.
+        "uniform" (default; used for all published results) resamples
+        two coordinates uniformly in the box. "levy" instead adds a
+        heavy-tailed Mantegna Levy-flight step (beta = 1.5) to the two
+        coordinates, provided as a documented variant for future study.
 
     Chess-inspired mechanisms
     -------------------------
@@ -156,8 +195,12 @@ def chess_algorithm(fun, lb, ub, dim, pop, iters, rng,
         for i in idx_k:
             if rng.random() < 0.10 * a / 2.0:           # exploratory leap
                 j, k = rng.choice(dim, size=2, replace=False)
-                Xn[i, j] = lb + L * rng.random()
-                Xn[i, k] = lb + L * rng.random()
+                if knight_leap == "levy":
+                    Xn[i, j] = X[i, j] + 0.05 * L * _levy_step(rng)
+                    Xn[i, k] = X[i, k] + 0.05 * L * _levy_step(rng)
+                else:
+                    Xn[i, j] = lb + L * rng.random()
+                    Xn[i, k] = lb + L * rng.random()
             else:
                 j, k = rng.choice(dim, size=2, replace=False)
                 peer = X[rng.integers(max(1, i))]
@@ -374,9 +417,6 @@ def grey_wolf(fun, lb, ub, dim, pop, iters, rng):
 
     for t in range(iters):
         a = 2.0 * (1.0 - t / iters)
-        Xn = np.empty_like(X)
-        for leader, arr in ((alpha, 0), (beta, 1), (delta, 2)):
-            pass  # vectorized below
         r1, r2 = rng.random((pop, dim)), rng.random((pop, dim))
         A1, C1 = 2 * a * r1 - a, 2 * r2
         X1 = alpha - A1 * np.abs(C1 * alpha - X)
