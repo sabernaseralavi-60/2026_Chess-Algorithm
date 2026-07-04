@@ -105,7 +105,7 @@ def make_tables(finals):
     def sci(x):
         return f"{x:.3e}"
 
-    with open(f"{OUT_RES}/table_stats.md", "w") as fmd:
+    with open(f"{OUT_RES}/table_stats.md", "w", encoding="utf8") as fmd:
         fmd.write("| Function | Algorithm | Mean | Std | Best | Worst |\n")
         fmd.write("|---|---|---:|---:|---:|---:|\n")
         for fname, (_, _, _, label) in BENCHMARKS.items():
@@ -118,14 +118,14 @@ def make_tables(finals):
                 fmd.write(f"| {r.Function} | {r.Algorithm} | {m} | "
                           f"{sci(r.Std)} | {sci(r.Best)} | {sci(r.Worst)} |\n")
 
-    with open(f"{OUT_RES}/table_wilcoxon.md", "w") as fmd:
+    with open(f"{OUT_RES}/table_wilcoxon.md", "w", encoding="utf8") as fmd:
         fmd.write("| Function | Comparison | p-value | Result (α = 0.05) |\n")
         fmd.write("|---|---|---:|---|\n")
         for _, r in wf.iterrows():
             fmd.write(f"| {r['Function']} | {r['Comparison']} | "
                       f"{r['p-value']:.3e} | {r['Significant (a=0.05)']} |\n")
 
-    with open(f"{OUT_RES}/table_anova.md", "w") as fmd:
+    with open(f"{OUT_RES}/table_anova.md", "w", encoding="utf8") as fmd:
         fmd.write("| Function | F-statistic | p-value |\n|---|---:|---:|\n")
         for _, r in af.iterrows():
             fmd.write(f"| {r['Function']} | {r['F-statistic']:.3f} | "
@@ -218,10 +218,11 @@ def make_flowchart():
                 xytext=(X0 + W - 0.05, 0.072),
                 arrowprops=dict(arrowstyle="->", color="#1a1a2e", lw=1.0,
                                 connectionstyle="angle,angleA=0,angleB=90"))
-    ax.text(X0 + W + 0.02, 0.5, "No", fontsize=8)
-    arrow(X0 + 0.06, 0.072, 0.06, 0.072)
-    ax.text(0.075, 0.09, "Yes", fontsize=8)
-    box(0.005, 0.03, 0.12, 0.06, "Return\nKing", "#dcdce8")
+    ax.text(X0 + W + 0.075, 0.5, "No", fontsize=8, ha="left")
+    # "Yes" branch: arrow stops at the Return-King box edge, label above it
+    arrow(X0 + 0.06, 0.0725, 0.135, 0.0725)
+    ax.text((X0 + 0.06 + 0.135) / 2, 0.088, "Yes", fontsize=8, ha="center")
+    box(0.005, 0.042, 0.12, 0.06, "Return\nKing", "#dcdce8")
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
     fig.savefig(f"{OUT_FIG}/ca_flowchart.png", bbox_inches="tight")

@@ -202,7 +202,7 @@ def make_outputs(curves, finals, bests):
     df = pd.DataFrame(rows)
     df.to_csv("../results/traffic_stats.csv", index=False)
 
-    with open("../results/table_traffic.md", "w") as fmd:
+    with open("../results/table_traffic.md", "w", encoding="utf8") as fmd:
         fmd.write("| Algorithm | Mean delay (veh·h/h) | Std | Best | Worst |\n")
         fmd.write("|---|---:|---:|---:|---:|\n")
         best_mean = df["Mean delay (veh-h/h)"].min()
@@ -214,7 +214,7 @@ def make_outputs(curves, finals, bests):
                       f"{r['Best']:.3f} | {r['Worst']:.3f} |\n")
 
     # Wilcoxon: CA vs each
-    with open("../results/table_traffic_wilcoxon.md", "w") as fmd:
+    with open("../results/table_traffic_wilcoxon.md", "w", encoding="utf8") as fmd:
         fmd.write("| Comparison | p-value | Result (α = 0.05) |\n|---|---:|---|\n")
         for alg in ALGS[1:]:
             _, p = stats.ranksums(finals["CA"], finals[alg])
@@ -258,15 +258,21 @@ def make_outputs(curves, finals, bests):
         ax.plot([x, x], [0.15, 0.85], color="#999", lw=3, zorder=1)
         ax.add_patch(plt.Circle((x, 0.5), 0.028, fc="#1a1a2e", zorder=3))
         ax.text(x, 0.95, f"I{i+1}", ha="center", fontsize=11, weight="bold")
-        ax.text(x, 0.03, f"cross: {DEMAND[i,2]:.0f}/{DEMAND[i,3]:.0f} veh/h",
-                ha="center", fontsize=7, color="#555")
+        # stagger the cross-street demand labels on two rows so that
+        # closely spaced intersections do not overlap
+        y_lab = 0.02 if i % 2 == 0 else -0.10
+        ax.text(x, y_lab, f"cross: {DEMAND[i,2]:.0f}/{DEMAND[i,3]:.0f} veh/h",
+                ha="center", fontsize=6.8, color="#555")
     for i, s in enumerate(SPACING):
         xm = (xs_n[i] + xs_n[i + 1]) / 2
         ax.annotate(f"{s:.0f} m", (xm, 0.60), ha="center", fontsize=8)
-    ax.annotate("arterial EB  →", (0.5, 0.78), ha="center", fontsize=9)
-    ax.annotate("←  arterial WB", (0.5, 0.24), ha="center", fontsize=9)
+    # direction labels centred in the widest gap (I5-I6) to avoid the
+    # vertical cross-street lines
+    x_gap = (xs_n[4] + xs_n[5]) / 2
+    ax.annotate("arterial EB  →", (x_gap, 0.76), ha="center", fontsize=9)
+    ax.annotate("←  arterial WB", (x_gap, 0.26), ha="center", fontsize=9)
     ax.set_xlim(-0.08, 1.08)
-    ax.set_ylim(0, 1.05)
+    ax.set_ylim(-0.16, 1.05)
     fig.savefig("../figures/traffic_network.png", bbox_inches="tight")
     plt.close(fig)
 
@@ -274,7 +280,7 @@ def make_outputs(curves, finals, bests):
     span = UB - LB
     z = LB + span * np.clip(bests["CA"], 0, 1)
     C = z[0]
-    with open("../results/best_ca_plan.md", "w") as fmd:
+    with open("../results/best_ca_plan.md", "w", encoding="utf8") as fmd:
         fmd.write("| Parameter | Value |\n|---|---:|\n")
         fmd.write(f"| Cycle length C | {C:.1f} s |\n")
         for i in range(N_INT):
@@ -297,7 +303,9 @@ def make_outputs(curves, finals, bests):
         ax.text(C + 1.5, i, f"offset {o:.0f} s", va="center", fontsize=8)
     ax.set_xlabel("Time within cycle (s)")
     ax.set_xlim(0, C * 1.25)
-    ax.legend(frameon=False, loc="lower right", fontsize=8)
+    # legend below the axes so it cannot collide with the offset labels
+    ax.legend(frameon=False, fontsize=8, ncol=2,
+              loc="upper center", bbox_to_anchor=(0.5, -0.14))
     fig.tight_layout()
     fig.savefig("../figures/traffic_best_plan.png", bbox_inches="tight")
     plt.close(fig)

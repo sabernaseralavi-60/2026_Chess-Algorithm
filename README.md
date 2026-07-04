@@ -5,7 +5,15 @@
 Seyed Saber Naseralavi (Shahid Bahonar University of Kerman) — corresponding author
 Seyedali Mirjalili (Torrens University Australia) — *invited co-author; participation pending confirmation*
 
-📖 **Read the book online:** https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/ (published via GitHub Actions on every push)
+## 📖 Where to read the paper
+
+| Output | Online | Local build |
+|---|---|---|
+| HTML article (English) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>** | `_article/index.html` |
+| PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
+| Word manuscript (Persian, RTL) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper-fa.docx>** | `_article/paper-fa.docx` |
+
+The online copies are published to GitHub Pages from the `gh-pages` branch via `quarto publish gh-pages`. To rebuild locally, run `quarto render` (outputs land in `_article/`).
 
 ## What is this?
 
@@ -21,28 +29,31 @@ The Chess Algorithm (CA) is a population-based metaheuristic in which search age
 | Threefold repetition | Re-deployment of agents that collapse onto the King |
 | Promotion | Rank-based role reassignment every iteration |
 
-CA is benchmarked against **GA, PSO, SA, and GWO** on six classical 30-D functions (30 runs, identical evaluation budgets, ANOVA + Wilcoxon tests) and applied to a **coordinated signal timing problem** on an eight-intersection urban arterial (Webster/HCM time-dependent delay model).
+CA is benchmarked against **GA, PSO, SA, and GWO** on six classical 30-D functions (30 runs, matched evaluation budgets, ANOVA + Wilcoxon tests), applied to a **coordinated signal timing problem** on an eight-intersection urban arterial (Webster/HCM time-dependent delay model), and further compared against **six third-party implementations from the [`mealpy`](https://github.com/thieu1995/mealpy) library** (WOA, SCA, ALO, MFO, HHO, DE) on two transportation problems — the signal timing instance and a **continuous berth allocation** instance (Example 1.9 of *Quantitative Methods in Transportation*, 2020) whose global optimum is known exactly.
 
-**Honest headline results:** CA significantly outperforms GA, PSO, and SA on the majority of the benchmark suite; GWO remains stronger on the classical functions; on the arterial signal coordination case study CA is statistically indistinguishable from GA/PSO/GWO and attains the best solution found by any method.
+**Honest headline results:** CA significantly outperforms GA, PSO, and SA on the majority of the benchmark suite; GWO remains stronger on the classical functions; on the transportation problems CA matches the best solution found by any competitor and outperforms several widely used third-party algorithms (see the paper's extended-comparison section for the statistics).
 
 ## Repository layout
 
 ```
-├── _quarto.yml            # Quarto book configuration (HTML + PDF)
-├── index.qmd              # Title page, abstract, author bio
-├── chapters/              # 01 Introduction … 06 References
+├── _quarto.yml            # Quarto article project configuration
+├── paper.qmd              # English article (renders to HTML + PDF)
+├── paper-fa.qmd           # Persian article (renders to Word .docx, RTL)
+├── index.qmd, chapters/   # Legacy book sources (superseded by paper.qmd)
 ├── theme.scss             # Chessboard-derived academic theme
-├── references.bib         # Bibliography (APA)
+├── references.bib         # Bibliography (APA, via apa.csl)
 ├── src/
 │   ├── algorithms.py          # CA + GA, PSO, SA, GWO (shared interface)
 │   ├── benchmark_functions.py # F1–F6 test suite
 │   ├── run_benchmarks.py      # Benchmark experiments → results/, figures/
-│   └── traffic_case_study.py  # Arterial signal timing → results/, figures/
+│   ├── traffic_case_study.py  # Arterial signal timing → results/, figures/
+│   └── mealpy_comparison.py   # CA vs mealpy (WOA/SCA/ALO/MFO/HHO/DE) on
+│                              #   signal timing + continuous berth allocation
 ├── results/               # Committed CSVs + Markdown tables (reproducible)
 ├── figures/               # Committed publication figures
 ├── assets/                # Author photo
 ├── Letter_to_Dr_Mirjalili.md
-└── .github/workflows/publish.yml  # Render & deploy to GitHub Pages
+└── _ci/publish.yml        # Render & deploy workflow (see below)
 ```
 
 ## Reproducing everything
@@ -54,15 +65,16 @@ pip install numpy scipy matplotlib
 
 python src/run_benchmarks.py       # ~ a few minutes; regenerates all benchmark tables/figures
 python src/traffic_case_study.py   # regenerates the case-study tables/figures
+python src/mealpy_comparison.py    # extended third-party comparison (pip install mealpy)
 
-quarto render                      # builds _book/ (HTML + PDF)
+quarto render                      # builds _article/ (EN: HTML + PDF; FA: docx)
 ```
 
-All random seeds are fixed; the committed `results/` and `figures/` correspond exactly to the numbers in the book.
+All random seeds are fixed; the committed `results/` and `figures/` correspond exactly to the numbers in the paper.
 
 ## Publication & deployment
 
-A ready-made GitHub Actions workflow is provided at **`_ci/publish.yml`**. It renders the Quarto book (HTML + PDF via TinyTeX) on every push to `main` and publishes it to the `gh-pages` branch.
+A ready-made GitHub Actions workflow is provided at **`_ci/publish.yml`**. It renders the Quarto article (HTML + PDF via TinyTeX) on every push to `main` and publishes it to the `gh-pages` branch.
 
 > **One-time activation required.** The access token used to create this repository did not carry the `workflow` scope, so GitHub rejected pushing the file directly into `.github/workflows/`. To activate CI, run once from a clone (or move the file in the GitHub web editor):
 >
@@ -84,13 +96,13 @@ Professor Seyedali Mirjalili is listed as an **invited co-author whose participa
 If you use CA in your research, please cite this repository until a journal version is available:
 
 ```bibtex
-@book{naseralavi2026chess,
-  title     = {The Chess Algorithm: A Novel Metaheuristic Optimization Technique
-               with Applications in Transportation Network Engineering},
-  author    = {Naseralavi, Seyed Saber},
-  year      = {2026},
-  publisher = {GitHub},
-  url       = {https://github.com/sabernaseralavi-60/2026_Chess-Algorithm}
+@misc{naseralavi2026chess,
+  title        = {The Chess Algorithm: A Novel Metaheuristic Optimization Technique
+                  with Applications in Transportation Network Engineering},
+  author       = {Naseralavi, Seyed Saber},
+  year         = {2026},
+  howpublished = {Preprint},
+  url          = {https://github.com/sabernaseralavi-60/2026_Chess-Algorithm}
 }
 ```
 
