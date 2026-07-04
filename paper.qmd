@@ -295,11 +295,13 @@ Input: objective f, bounds [l, u], dimension D,
 
 ## Flowchart
 
+@fig-flowchart summarizes one full iteration of the algorithm.
+
 ![Flowchart of the Chess Algorithm.](figures/ca_flowchart.png){#fig-flowchart fig-align="center" width="88%"}
 
 ## Properties and design rationale
 
-**Elitism and convergence.** The King's fitness never increases: it is replaced only by strictly better points, whether through the population update, en passant, or castling. That elitism buys the usual asymptotic guarantee.
+**Elitism and convergence.** The King's fitness never increases: it is replaced only by strictly better points, whether through the population update, en passant, or castling. That elitism buys the usual asymptotic guarantee (@prp-convergence).
 
 ::: {#prp-convergence}
 ## Elitist convergence in probability
@@ -321,7 +323,7 @@ Of course, an asymptotic statement of this kind says nothing about what happens 
 
 CA is compared against four established metaheuristics: a real-coded GA with tournament selection, BLX-$\alpha$ crossover, Gaussian mutation, and elitism [@holland1975adaptation; @goldberg1989genetic]; PSO with linearly decreasing inertia [@kennedy1995pso]; SA [@kirkpatrick1983sa], granted a population-equivalent evaluation budget so the comparison stays fair; and GWO [@mirjalili2014gwo].
 
-The suite consists of six standard functions covering unimodal, ill-conditioned, and highly multimodal terrain:
+The suite consists of six standard functions covering unimodal, ill-conditioned, and highly multimodal terrain (@tbl-suite):
 
 | Function | Type | Search domain | $f^{*}$ |
 |---|---|---|---:|
@@ -340,13 +342,15 @@ Statistics follow @derrac2011nonparametric: one-way ANOVA to establish that the 
 
 ## Descriptive results
 
+@tbl-stats reports the mean, standard deviation, best, and worst final errors for every algorithm–function pair.
+
 {{< include results/table_stats.md >}}
 
 : Mean, standard deviation, best, and worst final objective values over 30 runs (best mean per function in bold). {#tbl-stats tbl-colwidths="[18,12,18,18,17,17]"}
 
 ## Convergence behavior
 
-@fig-convergence shows the median best-so-far curves, and three patterns are worth pointing out. On F1, F4, and F6, CA keeps descending through the whole run — the en-passant success rule goes on finding improvements deep in the endgame, where GA and PSO stagnated hundreds of iterations earlier. On the ill-conditioned Rosenbrock valley (F2), every population method slows to a crawl, CA and GA tracking each other closely the whole way down. And GWO shows its well-documented strength on this classical suite, converging fastest and deepest on F1, F5, and F6.
+@fig-convergence shows the median best-so-far curves, and three patterns are worth pointing out. On F1, F4, and F6, CA keeps descending through the whole run — the en-passant success rule goes on finding improvements deep in the endgame, where GA and PSO stagnated hundreds of iterations earlier. On the ill-conditioned Rosenbrock valley (F2), every population method slows to a crawl, CA and GA tracking each other closely the whole way down. And GWO shows its well-documented strength on this classical suite, converging fastest and deepest on F1, F5, and F6. The distributions of final values behind these curves are shown in @fig-boxplots.
 
 ![Median convergence curves (30 runs, semi-log scale).](figures/convergence_all.png){#fig-convergence fig-align="center" width="100%"}
 
@@ -354,13 +358,13 @@ Statistics follow @derrac2011nonparametric: one-way ANOVA to establish that the 
 
 ## Statistical tests
 
-One-way ANOVA confirms that the algorithm factor is highly significant on every function:
+One-way ANOVA confirms that the algorithm factor is highly significant on every function (@tbl-anova):
 
 {{< include results/table_anova.md >}}
 
 : One-way ANOVA over the five algorithms, per function. {#tbl-anova}
 
-The pairwise Wilcoxon tests give the sharper picture:
+The pairwise Wilcoxon tests give the sharper picture (@tbl-wilcoxon):
 
 {{< include results/table_wilcoxon.md >}}
 
@@ -380,7 +384,7 @@ What should a practitioner take from this? The rankings are problem-dependent �
 
 Coordinated fixed-time signal timing along an urban arterial is a classic of transportation network optimization, and a spiteful one. The objective surface is multimodal, because different offset combinations produce different locally good "green waves." The variables are heterogeneous — a common cycle, per-intersection splits, offsets. And the delay model is nonlinear and, in practice, non-differentiable [@ceylan2004traffic; @roess2019traffic]. In short, it is a natural first engineering test for CA.
 
-Our test bed is an eight-intersection arterial with spacings of $450, 380, 520, 300, 610, 420,$ and $350$ m, a progression speed of $50$ km/h, near-saturation two-way traffic (eastbound approach demands between roughly $1{,}240$ and $1{,}400$ veh/h), and conflicting cross-street demands at every junction. Each intersection runs a two-phase plan.
+Our test bed is an eight-intersection arterial with spacings of $450, 380, 520, 300, 610, 420,$ and $350$ m, a progression speed of $50$ km/h, near-saturation two-way traffic (eastbound approach demands between roughly $1{,}240$ and $1{,}400$ veh/h), and conflicting cross-street demands at every junction (@fig-network). Each intersection runs a two-phase plan.
 
 ![Layout of the eight-intersection arterial test bed.](figures/traffic_network.png){#fig-network fig-align="center" width="100%"}
 
@@ -416,6 +420,8 @@ CA, GA, PSO, and GWO — the three strongest baselines from @sec-benchmarks plus
 
 ## Results
 
+@tbl-traffic summarizes the final delays; @fig-traffic-conv and @fig-traffic-box show the convergence behavior and the spread across runs.
+
 {{< include results/table_traffic.md >}}
 
 : Final total delay over 30 runs (best mean in bold). {#tbl-traffic}
@@ -432,7 +438,7 @@ Four observations. First, all four algorithms land within about one percent of e
 
 ## The best coordination plan found
 
-The best plan discovered (by CA) selects the minimum cycle, $C = 60$ s — a sensible choice under Webster's guidance whenever splits can be kept efficient — with the following timings:
+The best plan discovered (by CA) selects the minimum cycle, $C = 60$ s — a sensible choice under Webster's guidance whenever splits can be kept efficient — with the timings of @tbl-plan, drawn as a time–space diagram in @fig-plan:
 
 {{< include results/best_ca_plan.md >}}
 
@@ -448,7 +454,55 @@ For a transportation agency the message is straightforward: CA can be used on si
 
 # Extended Comparison on Independent Implementations {#sec-mealpy}
 
-<!-- SECTION CONTENT ADDED AFTER EXPERIMENTS COMPLETE -->
+## Motivation
+
+Every baseline in @sec-benchmarks and @sec-transport was implemented by us, in the same code style and the same array-vectorized idiom as CA itself. That is standard practice, but it leaves a legitimate question on the table: would CA still look competitive against implementations it had no hand in writing? To answer that, we turn to `mealpy` [@vanthieu2023mealpy], a large, actively maintained, third-party Python library that currently ships several hundred metaheuristic variants with a common `solve(problem, seed=...)` interface. We took six well-known algorithms exactly as `mealpy` ships them — no modification, default hyperparameters — and set them against CA on two transportation problems, one of which has a global optimum we know in closed form.
+
+The six competitors are the Whale Optimization Algorithm (WOA) [@mirjalili2016whale], the Sine Cosine Algorithm (SCA) [@mirjalili2016sca], the Ant Lion Optimizer (ALO) [@mirjalili2015alo], Moth-Flame Optimization (MFO) [@mirjalili2015mfo], Harris Hawks Optimization (HHO) [@heidari2019hho], and Differential Evolution (DE) [@storn1997de]. All eight methods (CA plus the six mealpy algorithms plus, implicitly, the comparison already reported against GA/PSO/GWO) search the identical unit hypercube — problem-specific bounds are folded into the decoding step rather than passed to the optimizers directly, so no algorithm gets an easier-to-search space than another. Every algorithm runs with population 30 for 300 iterations across 30 independent runs, with run $r$ of every algorithm seeded identically at $\text{SEED}_0 + r$.
+
+## Problem P1: the arterial signal timing instance
+
+This is the same sixteen-variable coordination problem from @sec-transport. @tbl-mealpy-signal reports the summary statistics; @fig-mealpy-convergence (left panel) shows median convergence.
+
+{{< include results/table_mealpy_signal.md >}}
+
+: CA versus six mealpy algorithms on the arterial signal timing problem (P1). {#tbl-mealpy-signal}
+
+CA is significantly better than every one of the six competitors here — including SCA and ALO, its closest rivals in this group, at $p = 0.014$ and $p = 0.005$ respectively. WOA, HHO, and DE trail by a wide margin and show markedly higher run-to-run variance (standard deviations of 18–21 veh·h/h, versus 5.2 for CA), which suggests they struggle more than CA does to reliably re-find a good coordination plan across the sixteen-dimensional, periodic offset space. It is worth being honest about what this result does and does not say: GA and PSO, our own implementations from @sec-transport, still land in the same ballpark as CA on this problem (@tbl-traffic) — the point of this section is not that CA is uniquely strong on signal timing, but that its standing here does not depend on how generously we implemented its rivals.
+
+## Problem P2: continuous berth allocation with a known optimum
+
+Independent implementations answer one worry; a problem with a *known* optimal value answers another, namely whether an algorithm's apparent superiority is an artifact of comparing everyone's suboptimality on a problem nobody can actually solve. We borrow Example 1.9 of @teodorovic2020quantitative (Chapter 1): fifteen ships of known length, arrival time, and required service time must be assigned mooring times and berth positions along a continuous 1,000 m quay within a 1,920-minute horizon, so as to minimize total time spent in port. With unit weights, the mixed-integer formulation in the source has a trivial global optimum: every ship moors the instant it arrives and waits for nothing, giving
+
+$$
+F^{*} = \sum_{i=1}^{15} p_i = 4{,}860 \text{ min}.
+$$
+
+Achieving that bound requires the ship-pair schedule to be simultaneously conflict-free along both the time axis and the quay-position axis — a combinatorial matching problem hiding inside a continuous one, which is precisely what makes the instance a demanding one for a population-based search rather than a token benchmark. We encode each ship's mooring time $u_i \in [a_i,\ T - p_i]$ and berth position $v_i \in [0,\ S - s_i]$ as decision variables and penalize, rather than hard-constrain, the pairwise rectangle overlap in the time–space diagram, so the search can pass through momentarily infeasible plans on its way to a good one — the same soft-constraint philosophy already used for cross-street oversaturation in @sec-transport.
+
+{{< include results/table_mealpy_berth.md >}}
+
+: CA versus six mealpy algorithms on the continuous berth allocation problem (P2), objective in minutes. {#tbl-mealpy-berth}
+
+CA's advantage widens considerably on this problem: its mean objective is roughly a quarter of WOA's or HHO's, and it remains significantly better than every competitor, ALO included ($p = 0.031$), which is otherwise its nearest rival by a comfortable margin over the rest of the field. @fig-mealpy-convergence (right panel) shows why — CA and ALO are the only two methods that make sustained progress past iteration 50, while WOA, SCA, MFO, HHO, and DE largely plateau in the first fifty iterations and then creep for the remaining two hundred and fifty.
+
+![Median convergence on the two transportation problems, CA versus six mealpy algorithms (30 runs). The berth-allocation panel marks the known global optimum.](figures/mealpy_convergence.png){#fig-mealpy-convergence fig-align="center" width="100%"}
+
+We should be candid about how far even the best runs remain from $F^{*} = 4{,}860$. @tbl-berth-gap reports the optimality gap of each algorithm's best run, together with the residual overlap of its decoded plan.
+
+{{< include results/table_berth_gap.md >}}
+
+: Optimality gap and feasibility of the best plan found by each algorithm on P2. {#tbl-berth-gap}
+
+CA's best run sits $45\%$ above the true optimum — a substantial gap, and we do not dress it up as anything else. But two things about that gap are worth separating. First, it is the smallest gap on the table by a wide margin: CA's best solution is roughly $25$–$35$ percentage points closer to $F^{*}$ than five of its six competitors, and noticeably closer than ALO, its nearest rival. Second, the zero-overlap column shows that CA's best plan is fully feasible — ships do not actually collide in the time–space diagram — which is not true of WOA, SCA, MFO, or HHO, whose reported objectives still include unresolved penalty mass from residual overlaps. @fig-berth-plan shows CA's best schedule; every ship occupies its own rectangle with no overlap, though several ships wait appreciably longer than their arrival time, which is exactly where the remaining $45\%$ of the gap comes from.
+
+![Time–space diagram of the best berth allocation plan found by CA. Dotted lines mark each ship's arrival time; the gap between the arrival line and the left edge of a ship's rectangle is its waiting time.](figures/berth_best_plan.png){#fig-berth-plan fig-align="center" width="85%"}
+
+## What this section does and does not claim
+
+We want to be precise about the scope of this comparison. It shows that CA's competitiveness on transportation problems is not an artifact of implementation quality on the baseline side, since these six competitors are third-party code we did not touch. It does not show that CA is close to solving berth allocation to global optimality — a $45\%$ gap is real and the problem plainly deserves algorithms better tuned to its combinatorial structure than any of the seven general-purpose metaheuristics tested here. What we take from this section is narrower and, we think, still useful: among seven general-purpose population metaheuristics run with default settings and no problem-specific engineering, CA reaches the best and most consistently feasible solutions on both transportation instances tested.
+
+# Conclusions and Future Work
 
 # Conclusions and Future Work
 
@@ -456,9 +510,7 @@ For a transportation agency the message is straightforward: CA can be used on si
 
 This paper introduced the Chess Algorithm, a population-based metaheuristic whose defining feature is a heterogeneous-role architecture: agents dynamically assume the roles of Queens, Rooks, Bishops, Knights, and Pawns around an elite King, each with its own movement geometry, while five strategic mechanisms from chess theory — development, sacrifice, pinning, castling, en passant — plus a threefold-repetition rule govern the search.
 
-Stated with the restraint they deserve, the findings are these. On six classical 30-dimensional benchmarks under matched budgets, CA significantly outperforms GA, PSO, and SA on most of the suite (all six functions against PSO and SA; four of six against GA, with ties on Rosenbrock and Rastrigin). GWO remains significantly stronger than CA on that classical suite, and we regard this as an accurate placement of a first-generation algorithm rather than a defect to argue away. On the eight-intersection arterial problem, CA is statistically indistinguishable from GA, PSO, and GWO and attains the best solution found by any method.
-
-<!-- CONCLUSION MEALPY SENTENCE ADDED AFTER EXPERIMENTS -->
+Stated with the restraint they deserve, the findings are these. On six classical 30-dimensional benchmarks under matched budgets, CA significantly outperforms GA, PSO, and SA on most of the suite (all six functions against PSO and SA; four of six against GA, with ties on Rosenbrock and Rastrigin). GWO remains significantly stronger than CA on that classical suite, and we regard this as an accurate placement of a first-generation algorithm rather than a defect to argue away. On the eight-intersection arterial problem, CA is statistically indistinguishable from GA, PSO, and GWO and attains the best solution found by any method. And against six third-party implementations from the `mealpy` library — algorithms none of us wrote a line of — CA is significantly better on both transportation instances tested, including a continuous berth allocation problem with a known optimum, where it also produces the only fully feasible best-found plan among the strongest competitors.
 
 ## Limitations
 
