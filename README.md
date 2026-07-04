@@ -65,7 +65,9 @@ pip install numpy scipy matplotlib
 
 python src/run_benchmarks.py       # ~ a few minutes; regenerates all benchmark tables/figures
 python src/traffic_case_study.py   # regenerates the case-study tables/figures
-python src/mealpy_comparison.py    # extended third-party comparison (pip install mealpy)
+python src/mealpy_comparison.py    # extended third-party comparison
+#   requires mealpy; on Python >= 3.12 install it with:
+#   pip install --no-deps mealpy    (its pinned numpy fails to build there)
 
 quarto render                      # builds _article/ (EN: HTML + PDF; FA: docx)
 ```
