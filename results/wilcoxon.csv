@@ -1,25 +1,31 @@
 Function,Comparison,p-value,Significant (a=0.05)
-Sphere,CA vs GA,2.8719490663203234e-11,CA better
-Sphere,CA vs PSO,2.8719490663203234e-11,CA better
-Sphere,CA vs SA,2.8719490663203234e-11,CA better
-Sphere,CA vs GWO,2.8719490663203234e-11,CA worse
-Rosenbrock,CA vs GA,0.173777038979135,not significant
-Rosenbrock,CA vs PSO,1.1499274734848317e-06,CA better
-Rosenbrock,CA vs SA,2.8719490663203234e-11,CA better
-Rosenbrock,CA vs GWO,2.776958578613408e-06,CA worse
-Rastrigin,CA vs GA,0.4332897956218901,not significant
-Rastrigin,CA vs PSO,3.5097576968084746e-11,CA better
-Rastrigin,CA vs SA,2.8719490663203234e-11,CA better
-Rastrigin,CA vs GWO,8.01074760292363e-06,CA worse
-Griewank,CA vs GA,2.8719490663203234e-11,CA better
-Griewank,CA vs PSO,2.8719490663203234e-11,CA better
-Griewank,CA vs SA,2.8719490663203234e-11,CA better
-Griewank,CA vs GWO,9.193236731325049e-06,CA worse
-Ackley,CA vs GA,9.193236731325049e-06,CA worse
-Ackley,CA vs PSO,2.894412287525995e-07,CA better
-Ackley,CA vs SA,2.8719490663203234e-11,CA better
-Ackley,CA vs GWO,2.8719490663203234e-11,CA worse
-Schwefel 2.22,CA vs GA,2.8719490663203234e-11,CA better
-Schwefel 2.22,CA vs PSO,2.8719490663203234e-11,CA better
-Schwefel 2.22,CA vs SA,2.8719490663203234e-11,CA better
-Schwefel 2.22,CA vs GWO,2.8719490663203234e-11,CA worse
+Sphere,CA vs CA-static,0.0014796188964420704,CA worse
+Sphere,CA vs GA,2.871949066320324e-11,CA better
+Sphere,CA vs PSO,2.871949066320324e-11,CA better
+Sphere,CA vs SA,2.871949066320324e-11,CA better
+Sphere,CA vs GWO,2.871949066320324e-11,CA worse
+Rosenbrock,CA vs CA-static,0.06043289007986042,not significant
+Rosenbrock,CA vs GA,0.0010855630297854832,CA better
+Rosenbrock,CA vs PSO,2.5515076130333237e-09,CA better
+Rosenbrock,CA vs SA,2.871949066320324e-11,CA better
+Rosenbrock,CA vs GWO,2.9536944910250094e-08,CA worse
+Rastrigin,CA vs CA-static,0.6681063796183101,not significant
+Rastrigin,CA vs GA,0.5153597975802848,not significant
+Rastrigin,CA vs PSO,6.37303417845131e-11,CA better
+Rastrigin,CA vs SA,2.871949066320324e-11,CA better
+Rastrigin,CA vs GWO,6.160445128152279e-05,CA worse
+Griewank,CA vs CA-static,0.7006856607005523,not significant
+Griewank,CA vs GA,2.871949066320324e-11,CA better
+Griewank,CA vs PSO,2.871949066320324e-11,CA better
+Griewank,CA vs SA,2.871949066320324e-11,CA better
+Griewank,CA vs GWO,1.478706364173969e-05,CA worse
+Ackley,CA vs CA-static,0.0109930026457564,CA worse
+Ackley,CA vs GA,5.316742803642794e-10,CA better
+Ackley,CA vs PSO,4.4029951679875323e-10,CA better
+Ackley,CA vs SA,2.871949066320324e-11,CA better
+Ackley,CA vs GWO,2.871949066320324e-11,CA worse
+Schwefel 2.22,CA vs CA-static,5.101390926008103e-05,CA worse
+Schwefel 2.22,CA vs GA,2.871949066320324e-11,CA better
+Schwefel 2.22,CA vs PSO,2.871949066320324e-11,CA better
+Schwefel 2.22,CA vs SA,2.871949066320324e-11,CA better
+Schwefel 2.22,CA vs GWO,2.871949066320324e-11,CA worse

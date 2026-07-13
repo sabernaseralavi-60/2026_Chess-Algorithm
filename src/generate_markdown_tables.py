@@ -18,7 +18,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "results")
 
-ALGOS = ["CA-v3", "CA-v2", "GWO", "PSO", "GA", "WOA"]
+ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA"]
 
 # camelCase dict keys (engineering_problems.py) are fine for code but
 # render as unreadable, unbreakable strings in a narrow PDF table column
@@ -66,7 +66,7 @@ def rank_table(ranks_csv, out_name):
     for _, row in df.iterrows():
         algo = row["algo"]
         val = f"{row['mean_rank']:.3f}"
-        if algo == "CA-v3":
+        if algo == "CA":
             algo, val = f"**{algo}**", f"**{val}**"
         lines.append(f"| {algo} | {val} |")
     with open(os.path.join(RESULTS, out_name), "w", encoding="utf8") as f:
@@ -77,7 +77,7 @@ def wtl_table(wilc_csv, index_col, out_name):
     wl = pd.read_csv(wilc_csv)
     n_items = wl[index_col].nunique()
     lines = ["| Competitor | Win | Tie | Loss |", "|---|---:|---:|---:|"]
-    for comp in [a for a in ALGOS if a != "CA-v3"]:
+    for comp in [a for a in ALGOS if a != "CA"]:
         sub = wl[wl.competitor == comp]
         w = ((sub.significant == "yes")
              & (sub.v3_mean_direction == "better")).sum()

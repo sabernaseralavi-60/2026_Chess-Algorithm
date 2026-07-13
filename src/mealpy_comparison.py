@@ -52,7 +52,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from algorithms import chess_algorithm
+from algorithms import chess_algorithm_v3 as chess_algorithm
 from traffic_case_study import total_delay, LB as SIG_LB, UB as SIG_UB
 
 warnings.filterwarnings("ignore")

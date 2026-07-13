@@ -32,14 +32,14 @@ RESULTS = os.path.join(ROOT, "results")
 FIGURES = os.path.join(ROOT, "figures")
 os.makedirs(FIGURES, exist_ok=True)
 
-ALGOS = ["CA-v3", "CA-v2", "GWO", "PSO", "GA", "WOA"]
+ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA"]
 
 # identity palette (validated: lightness band, chroma floor, CVD
 # separation, contrast — all PASS on light surface) + line styles as
 # secondary encoding for print/CVD
-COLORS = {"CA-v3": "#1d4ed8", "CA-v2": "#c2410c", "GWO": "#059669",
+COLORS = {"CA": "#1d4ed8", "CA-static": "#c2410c", "GWO": "#059669",
           "PSO": "#be123c", "GA": "#a16207", "WOA": "#9333ea"}
-STYLES = {"CA-v3": "-", "CA-v2": "--", "GWO": "-.", "PSO": ":",
+STYLES = {"CA": "-", "CA-static": "--", "GWO": "-.", "PSO": ":",
           "GA": (0, (3, 1, 1, 1)), "WOA": (0, (5, 2))}
 
 plt.rcParams.update({
@@ -120,10 +120,10 @@ def summarize(stats, wilc, index_col, out_lines, tag):
                      f"(chi2={fr.statistic:.2f}, p={fr.pvalue:.3g}) ==")
     out_lines.append(mean_ranks.to_string())
 
-    out_lines.append(f"\n== {tag}: CA-v3 win/tie/loss "
+    out_lines.append(f"\n== {tag}: CA win/tie/loss "
                      f"(Wilcoxon rank-sum, alpha=0.05) ==")
     n_items = wilc[index_col].nunique()
-    for comp in [a for a in ALGOS if a != "CA-v3"]:
+    for comp in [a for a in ALGOS if a != "CA"]:
         sub = wilc[wilc.competitor == comp]
         w = ((sub.significant == "yes")
              & (sub.v3_mean_direction == "better")).sum()

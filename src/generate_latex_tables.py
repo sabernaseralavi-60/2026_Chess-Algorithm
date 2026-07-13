@@ -29,8 +29,8 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "results")
 
-ALGOS = ["CA-v3", "CA-v2", "GWO", "PSO", "GA", "WOA"]
-ALGO_TEX = {"CA-v3": "CA-v3", "CA-v2": "CA-v2", "GWO": "GWO", "PSO": "PSO",
+ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA"]
+ALGO_TEX = {"CA": "CA", "CA-static": "CA-static", "GWO": "GWO", "PSO": "PSO",
             "GA": "GA", "WOA": "WOA"}
 DISPLAY_NAME = {
     "WeldedBeam": "Welded Beam", "Spring": "Spring",
@@ -91,7 +91,7 @@ def rank_table(ranks_csv, caption, label):
     ]
     for _, row in df.iterrows():
         algo = ALGO_TEX[row["algo"]]
-        bold = algo == "CA-v3"
+        bold = algo == "CA"
         val = f"{row['mean_rank']:.3f}"
         if bold:
             algo, val = rf"\textbf{{{algo}}}", rf"\textbf{{{val}}}"
@@ -113,7 +113,7 @@ def wtl_table(wilc_csv, index_col, caption, label):
         r"Competitor & Win & Tie & Loss \\",
         r"\midrule",
     ]
-    for comp in [a for a in ALGOS if a != "CA-v3"]:
+    for comp in [a for a in ALGOS if a != "CA"]:
         sub = wl[wl.competitor == comp]
         w = ((sub.significant == "yes")
              & (sub.v3_mean_direction == "better")).sum()
@@ -127,10 +127,10 @@ def wtl_table(wilc_csv, index_col, caption, label):
 
 # ----------------------------------------------------------------------
 # CEC-2017 detailed longtable (mean +/- std, best per function bolded,
-# +/=/- significance marker relative to CA-v3)
+# +/=/- significance marker relative to CA)
 # ----------------------------------------------------------------------
 def sig_marker(wilc, item, algo, index_col="func"):
-    if algo == "CA-v3":
+    if algo == "CA":
         return ""
     row = wilc[(wilc[index_col] == item) & (wilc.competitor == algo)]
     if row.empty or row.iloc[0]["significant"] != "yes":
@@ -148,7 +148,7 @@ def cec_detail_longtable(stats_csv, wilc_csv):
         r"\begin{longtable}{@{}l" + "c" * len(ALGOS) + r"@{}}",
         r"\caption{CEC-2017 results (D=30): mean error $f-f^{*}$ over "
         r"30 runs, best mean per function in bold. Superscripts mark "
-        r"CA-v3 vs. the column algorithm under a two-sided Wilcoxon "
+        r"CA vs. the column algorithm under a two-sided Wilcoxon "
         r"rank-sum test at $\alpha=0.05$: $^{+}$ column algorithm "
         r"significantly better, $^{-}$ column algorithm significantly "
         r"worse, $^{=}$ not significant. F5, F9, F15, F19, and F21 are "
@@ -248,7 +248,7 @@ def main():
                   "better).",
                   "tab:cec2017-friedman"),
         wtl_table(os.path.join(RESULTS, "cec2017_wilcoxon.csv"), "func",
-                 "CEC-2017: CA-v3 win/tie/loss against each competitor "
+                 "CEC-2017: CA win/tie/loss against each competitor "
                  "(Wilcoxon rank-sum, $\\alpha=0.05$, 24 functions).",
                  "tab:cec2017-wtl"),
         cec_detail_longtable(
@@ -262,7 +262,7 @@ def main():
                   "tab:engineering-friedman"),
         wtl_table(os.path.join(RESULTS, "engineering_wilcoxon.csv"),
                  "problem",
-                 "Engineering design problems: CA-v3 win/tie/loss "
+                 "Engineering design problems: CA win/tie/loss "
                  "against each competitor (Wilcoxon rank-sum, "
                  "$\\alpha=0.05$, 7 problems).",
                  "tab:engineering-wtl"),

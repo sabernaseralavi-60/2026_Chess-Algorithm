@@ -1,5 +1,6 @@
 | Comparison | p-value | Result (α = 0.05) |
 |---|---:|---|
-| CA vs GA | 3.219e-01 | not significant |
-| CA vs PSO | 9.293e-01 | not significant |
-| CA vs GWO | 7.363e-02 | not significant |
+| CA vs CA-static | 6.249e-02 | not significant |
+| CA vs GA | 2.002e-03 | CA better |
+| CA vs PSO | 3.089e-02 | CA worse |
+| CA vs GWO | 1.471e-02 | CA better |

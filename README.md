@@ -12,13 +12,13 @@ Seyedali Mirjalili (Torrens University Australia) — *invited co-author; partic
 | HTML article (English) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>** | `_article/index.html` |
 | PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
 
-The online copies are published to GitHub Pages from the `gh-pages` branch via `quarto publish gh-pages`. To rebuild locally, run `quarto render` (outputs land in `_article/`).
+The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, run `quarto render` (outputs land in `_article/`).
 
 A Persian (RTL) Word translation can be built locally from `paper-fa.qmd` (`quarto render paper-fa.qmd --to docx`); it is kept as a local-only build and is not published online.
 
 ## What is this?
 
-The Chess Algorithm (CA) is a population-based metaheuristic in which search agents play heterogeneous roles inspired by chess pieces (King, Queens, Rooks, Bishops, Knights, Pawns), governed by strategic mechanisms translated from chess theory:
+The Chess Algorithm (CA) is a population-based metaheuristic in which search agents play heterogeneous roles inspired by chess pieces (King, Queens, Rooks, Bishops, Knights, Pawns), each moving according to an operator abstracted from that piece's geometry. Strategic mechanisms translated from chess theory supply the control layer:
 
 | Chess concept | Algorithmic mechanism |
 |---|---|
@@ -26,54 +26,81 @@ The Chess Algorithm (CA) is a population-based metaheuristic in which search age
 | Sacrifice | Spread-scaled Metropolis acceptance (minor pieces only) |
 | Pinning | Progressive freezing of coordinates to the King's values |
 | Castling | Safeguarded coordinate-block exchange King ↔ Rook |
-| En passant | Self-adaptive local capture with an ES-style success rule |
+| En passant | Self-adaptive local capture, with a royal-council / discovered-attack probe in later phases |
 | Threefold repetition | Re-deployment of agents that collapse onto the King |
 | Promotion | Rank-based role reassignment every iteration |
 
-CA is benchmarked against **GA, PSO, SA, and GWO** on six classical 30-D functions (30 runs, matched evaluation budgets, ANOVA + Wilcoxon tests), applied to a **coordinated signal timing problem** on an eight-intersection urban arterial (Webster/HCM time-dependent delay model), and further compared against **six third-party implementations from the [`mealpy`](https://github.com/thieu1995/mealpy) library** (WOA, SCA, ALO, MFO, HHO, DE) on two transportation problems — the signal timing instance and a **continuous berth allocation** instance (Example 1.9 of *Quantitative Methods in Transportation*, 2020) whose global optimum is known exactly.
+On top of this, CA carries an **adaptive control layer**: a lightweight state machine reads the population's divergence, initiative, and local-search success every iteration and decides which of a richer tactical set applies — Novotny interference (bishops), the knight's fork, and, when the search is genuinely stuck, a blockade response combining a King's march with a Tal-style speculative-sacrifice reheat. An ablation configuration, **CA-static**, is the identical operator set with this adaptive layer switched off, and is carried through every experiment below to isolate what it contributes.
 
-**Honest headline results:** CA significantly outperforms GA, PSO, and SA on the majority of the benchmark suite; GWO remains stronger on the classical functions; on the transportation problems CA matches the best solution found by any competitor and outperforms several widely used third-party algorithms (see the paper's extended-comparison section for the statistics).
+## Headline results
+
+**CEC-2017 (24 validated functions, D=30, 30 independent runs)** against GWO, PSO, GA, and WOA: CA takes the **best mean Friedman rank** of the six algorithms compared, with zero losses to GWO or WOA and only 3/24 losses to PSO. Its one honestly-reported weak spot is against GA specifically (7 wins / 7 ties / 10 losses), concentrated on long-range, unstructured multimodal landscapes where GA's macro-scale crossover has a structural edge — read in the paper as a clean illustration of the No-Free-Lunch theorem, not argued away.
+
+**Seven classic constrained engineering design problems** (welded beam, pressure vessel, speed reducer, spring, three-bar truss, gear train, cantilever beam), same roster: CA again ranks first, losing exactly once across 35 pairwise comparisons.
+
+**Data-integrity audit:** before trusting any CEC-2017 result, every function was checked against its own claimed global optimum and, where that passed, checked empirically for whether *any* algorithm's best run beat the claimed optimum — a definitional impossibility if it's correct. Five of 29 functions failed this audit (F5, F9, F15, F19, F21) and were excluded; the pre-audit numbers are kept on record in `results/cec2017_stats_raw_unaudited.csv` rather than quietly dropped.
+
+**Transportation applications:** on an eight-intersection arterial signal-timing problem, CA is significantly better than GA and GWO, statistically tied with CA-static, and — reported plainly — significantly worse in mean delay than PSO, even though CA and CA-static both reach the single best plan found by any method. Against six independent third-party implementations from the [`mealpy`](https://github.com/thieu1995/mealpy) library (WOA, SCA, ALO, MFO, HHO, DE) on this same signal-timing problem and on a continuous berth-allocation instance with a known global optimum, CA is significantly better on both.
+
+Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO under matched budgets round out the evidence: CA beats PSO and SA on every function and GA on five of six, while GWO — as is well documented on this classical suite — keeps its edge.
 
 ## Repository layout
 
 ```
-├── _quarto.yml            # Quarto article project configuration
-├── paper.qmd              # English article (renders to HTML + PDF)
-├── paper-fa.qmd           # Persian article (renders to Word .docx, RTL)
-├── index.qmd, chapters/   # Legacy book sources (superseded by paper.qmd)
-├── theme.scss             # Chessboard-derived academic theme
-├── references.bib         # Bibliography (APA, via apa.csl)
+├── _quarto.yml                    # Quarto article project configuration
+├── paper.qmd                      # English article (renders to HTML + PDF)
+├── paper-fa.qmd                   # Persian article (renders to Word .docx, RTL)
+├── adaptive_ca_math_update.md     # Full equations for the adaptive control layer
+├── index.qmd, chapters/           # Legacy book sources (superseded by paper.qmd)
+├── theme.scss                     # Chessboard-derived academic theme
+├── references.bib                 # Bibliography (APA, via apa.csl)
 ├── src/
-│   ├── algorithms.py          # CA + GA, PSO, SA, GWO (shared interface)
-│   ├── benchmark_functions.py # F1–F6 test suite
-│   ├── run_benchmarks.py      # Benchmark experiments → results/, figures/
-│   ├── traffic_case_study.py  # Arterial signal timing → results/, figures/
-│   └── mealpy_comparison.py   # CA vs mealpy (WOA/SCA/ALO/MFO/HHO/DE) on
-│                              #   signal timing + continuous berth allocation
-├── results/               # Committed CSVs + Markdown tables (reproducible)
-├── figures/               # Committed publication figures
-├── assets/                # Author photo
+│   ├── algorithms.py               # CA (chess_algorithm_v3), CA-static (chess_algorithm_v2),
+│   │                                #   GA, PSO, SA, GWO — shared interface
+│   ├── benchmark_functions.py      # F1–F6 classical test suite
+│   ├── engineering_problems.py     # 7 constrained engineering design problems
+│   ├── run_benchmarks.py           # Six-function benchmark → results/, figures/
+│   ├── traffic_case_study.py       # Arterial signal timing → results/, figures/
+│   ├── mealpy_comparison.py        # CA vs mealpy (WOA/SCA/ALO/MFO/HHO/DE) on
+│   │                                #   signal timing + continuous berth allocation
+│   ├── cec2017_full_run.py         # Full CEC-2017 suite (partitionable, --part i/4)
+│   ├── engineering_full_run.py     # Full engineering-design benchmark
+│   ├── phase2_3_analysis.py        # Merge partitions, data-integrity audit,
+│   │                                #   Friedman/Wilcoxon stats, convergence figures
+│   ├── generate_markdown_tables.py # Quarto-includable result tables
+│   └── generate_latex_tables.py    # Camera-ready LaTeX tables (results/latex_tables_final.tex)
+├── results/                        # Committed CSVs + Markdown tables (reproducible)
+├── figures/                        # Committed publication figures (300 DPI)
+├── assets/                         # Author photo
 ├── Letter_to_Dr_Mirjalili.md
-└── _ci/publish.yml        # Render & deploy workflow (see below)
+└── _ci/publish.yml                 # Render & deploy workflow (see below)
 ```
 
 ## Reproducing everything
 
-Requirements: Python ≥ 3.10 with `numpy`, `scipy`, `matplotlib`; [Quarto](https://quarto.org) ≥ 1.4 (with TinyTeX for PDF).
+Requirements: Python ≥ 3.10 with `numpy`, `scipy`, `pandas`, `matplotlib`; [Quarto](https://quarto.org) ≥ 1.4 (with TinyTeX for PDF); [`opfunu`](https://github.com/thieu1995/opfunu) for the CEC-2017 suite; [`mealpy`](https://github.com/thieu1995/mealpy) for the third-party comparison.
 
 ```bash
-pip install numpy scipy matplotlib
+pip install numpy scipy pandas matplotlib opfunu
+pip install --no-deps mealpy    # on Python >= 3.12, mealpy's pinned numpy fails
+                                 # to build otherwise; --no-deps sidesteps it
 
-python src/run_benchmarks.py       # ~ a few minutes; regenerates all benchmark tables/figures
-python src/traffic_case_study.py   # regenerates the case-study tables/figures
-python src/mealpy_comparison.py    # extended third-party comparison
-#   requires mealpy; on Python >= 3.12 install it with:
-#   pip install --no-deps mealpy    (its pinned numpy fails to build there)
+python src/run_benchmarks.py               # six-function benchmark
+python src/traffic_case_study.py           # arterial signal-timing case study
+python src/mealpy_comparison.py            # extended third-party comparison
+python src/cec2017_full_run.py --part 0/4  # full CEC-2017 suite (run parts 0..3,
+python src/cec2017_full_run.py --part 1/4  #   in parallel or in sequence)
+python src/cec2017_full_run.py --part 2/4
+python src/cec2017_full_run.py --part 3/4
+python src/engineering_full_run.py         # 7 engineering design problems
+python src/phase2_3_analysis.py            # merge + audit + stats + figures
+python src/generate_markdown_tables.py     # paper-facing result tables
+python src/generate_latex_tables.py        # camera-ready LaTeX tables
 
-quarto render                      # builds _article/ (EN: HTML + PDF; FA: docx)
+quarto render                              # builds _article/ (EN: HTML + PDF; FA: docx)
 ```
 
-All random seeds are fixed; the committed `results/` and `figures/` correspond exactly to the numbers in the paper.
+All random seeds are fixed; the committed `results/` and `figures/` correspond exactly to the numbers in the paper. The CEC-2017 full run takes on the order of hours across its four partitions (mostly spent on the third-party baselines, not CA); everything else completes in minutes.
 
 ## Publication & deployment
 
