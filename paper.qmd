@@ -11,7 +11,7 @@ author:
       - name: "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia"
 date: 2026-07-04
 abstract: |
-  We introduce the Chess Algorithm (CA), a population-based metaheuristic that borrows its search logic from the strategy of chess rather than from foraging or hunting behavior in nature. The population is not homogeneous: at every iteration agents are ranked and assigned the roles of King, Queens, Rooks, Bishops, Knights, and Pawns, and each role moves according to an operator abstracted from the geometry of the corresponding piece. Strategic ideas from the game supply the control machinery. Development governs the exploration–exploitation schedule; sacrifice permits worse moves under a Metropolis-type rule restricted to minor pieces; pinning progressively freezes coordinates around the incumbent; castling exchanges coordinate blocks between the King and the best Rook when doing so helps; en passant performs an opportunistic, self-adaptive local search; and a threefold-repetition rule restores diversity whenever the population collapses onto the incumbent. We evaluate CA on six standard 30-dimensional benchmarks against GA, PSO, SA, and GWO under matched evaluation budgets (30 runs, ANOVA and Wilcoxon tests), where it significantly outperforms GA, PSO, and SA on most of the suite while GWO keeps its known edge on the classical functions. Practical value is then assessed on transportation problems. On the coordinated signal timing of an eight-intersection arterial with a Webster/HCM delay model, CA matches the best solution any competitor finds. In an extended comparison against six algorithms from the independent mealpy library (WOA, SCA, ALO, MFO, HHO, and DE) on the signal problem and on a continuous berth allocation instance with a known global optimum, CA's placement is assessed against third-party implementations rather than our own. The results support a measured claim: CA is a sound, competitive, and fully reproducible addition to the toolbox of transportation network optimization.
+  We introduce the Chess Algorithm (CA), a population-based metaheuristic that borrows its search logic from the strategy of chess rather than from foraging or hunting behavior in nature. The population is not homogeneous: at every iteration agents are ranked and assigned the roles of King, Queens, Rooks, Bishops, Knights, and Pawns, and each role moves according to an operator abstracted from the geometry of the corresponding piece. Strategic ideas from the game supply the control machinery. Development governs the exploration–exploitation schedule; sacrifice permits worse moves under a Metropolis-type rule restricted to minor pieces; pinning progressively freezes coordinates around the incumbent; castling exchanges coordinate blocks between the King and the best Rook when doing so helps; en passant performs an opportunistic, self-adaptive local search; and a threefold-repetition rule restores diversity whenever the population collapses onto the incumbent. We then extend the base algorithm into CA-v3, an adaptive variant that reads the state of the search each iteration — population divergence, acceptance rate, and local-search success — and switches between opening, middlegame, closed-position (prophylactic), and endgame tactical repertoires accordingly, adding operators such as Novotny interference, the knight's fork, the royal council, and a blockade-triggered speculative sacrifice modeled on Mikhail Tal's intuitive style. On six standard 30-dimensional benchmarks against GA, PSO, SA, and GWO under matched evaluation budgets, the base CA significantly outperforms GA, PSO, and SA on most of the suite while GWO keeps its known edge on the classical functions. On the full CEC-2017 benchmark suite (24 functions validated after auditing and excluding five defective third-party implementations, D=30, 30 independent runs), CA-v3 achieves the best mean Friedman rank among six algorithms including GWO, PSO, GA, and WOA, with zero losses to GWO, PSO, or WOA and a balanced, honestly reported trade-off against GA rooted in the No-Free-Lunch theorem. On seven classic constrained engineering design problems, CA-v3 again ranks first, losing only one of thirty-five pairwise comparisons. Practical value is further assessed on transportation problems: on the coordinated signal timing of an eight-intersection arterial with a Webster/HCM delay model, CA-v3 significantly outperforms GWO and the base CA; on a continuous berth allocation instance with a known global optimum, an extended comparison against six algorithms from the independent mealpy library (WOA, SCA, ALO, MFO, HHO, and DE) assesses CA's placement against third-party implementations rather than our own. The results support a measured claim: CA is a sound, competitive, adaptively extensible, and fully reproducible addition to the toolbox of global and transportation-network optimization.
 format:
   html:
     output-file: index.html
@@ -59,7 +59,7 @@ format:
 **Author note.** Dr. Seyedali Mirjalili is listed as an invited co-author; his participation is pending confirmation. The invitation reflects how much this study owes to his work on swarm and nature-inspired optimization, and his name will be retained only with his explicit consent.
 :::
 
-**Keywords:** metaheuristics; chess algorithm; global optimization; benchmark functions; traffic signal timing; berth allocation; transportation networks.
+**Keywords:** metaheuristics; chess algorithm; adaptive optimization; global optimization; CEC-2017 benchmarks; constrained engineering design; traffic signal timing; berth allocation; transportation networks.
 
 # Introduction
 
@@ -92,7 +92,7 @@ The Chess Algorithm (CA) proposed here formalizes that mapping. To avoid a misun
 
 ## Contributions and scope
 
-The paper contributes, in order: a complete mathematical specification of CA — initialization, rank-based role assignment, six movement operators, five strategic mechanisms, and a diversity rule (@sec-ca); a controlled benchmark study on six standard test functions in 30 dimensions against GA, PSO, SA, and GWO under matched budgets, with nonparametric testing following @derrac2011nonparametric (@sec-benchmarks); a transportation case study on coordinated signal timing of an eight-intersection arterial with a Webster/HCM delay model [@webster1958traffic; @roess2019traffic] (@sec-transport); an extended comparison against six third-party implementations from the `mealpy` library on two transportation problems, one of which has a known global optimum (@sec-mealpy); and a fully reproducible open-source implementation.
+The paper contributes, in order: a complete mathematical specification of CA — initialization, rank-based role assignment, six movement operators, five strategic mechanisms, and a diversity rule (@sec-ca); an adaptive extension, CA-v3, in which a lightweight state machine reads the population's divergence, acceptance rate, and local-search success each iteration and switches between opening, middlegame, closed-position, and endgame tactical repertoires — including several operators new to this paper (Novotny interference, the knight's fork, the royal council, a King's-march blockade response, and a Tal-style speculative-sacrifice reheat) (@sec-ca-v3); a controlled benchmark study on six standard test functions in 30 dimensions against GA, PSO, SA, and GWO under matched budgets, with nonparametric testing following @derrac2011nonparametric (@sec-benchmarks); a full evaluation on the CEC-2017 benchmark suite against GWO, PSO, GA, and WOA, including a data-integrity audit that identified five defective functions in the third-party `opfunu` reference implementation (@sec-cec2017); an evaluation on seven classic constrained engineering design problems against the same roster (@sec-engineering); a transportation case study on coordinated signal timing of an eight-intersection arterial with a Webster/HCM delay model [@webster1958traffic; @roess2019traffic] (@sec-transport); an extended comparison against six third-party implementations from the `mealpy` library on two transportation problems, one of which has a known global optimum (@sec-mealpy); and a fully reproducible open-source implementation.
 
 A remark on tone before we start. We report results with deliberate restraint and no claim of universal superiority; GWO, in particular, remains stronger on several classical benchmarks, and we say so plainly where it happens. The claim we do defend is narrower: CA is well-founded, novel, and competitive, and on the transportation problems that motivated it in the first place it performs on par with — and against some widely used algorithms, better than — the available alternatives.
 
@@ -317,6 +317,148 @@ Of course, an asymptotic statement of this kind says nothing about what happens 
 
 **Parameter economy.** Everything in this paper runs on the one configuration in @tbl-params. How sensitive performance is to the role fractions is a fair question we have not yet answered; it is on the future-work list rather than swept under the rug.
 
+# The Adaptive Chess Algorithm: CA-v3 {#sec-ca-v3}
+
+## From a fixed repertoire to an adaptive one
+
+CA as specified in @sec-ca applies the same operator set at every iteration, varying only through the deterministic schedules $a(t)$, $p_{\text{pin}}(t)$, and $\theta(t)$. This is faithful to the *mechanics* of chess but not to how a strong player behaves: a grandmaster does not run the same combination in a wide-open middlegame as in a locked pawn structure or a simplified endgame. Which tactic is right depends on the position, not on the move counter alone. This section introduces CA-v3, an adaptive variant in which a lightweight state machine reads four cheap statistics of the population each iteration and switches the active tactical repertoire accordingly. Every mechanism below is an addition to, not a replacement of, the operators of @sec-ca; a second variant, CA-v2, keeps the operator vocabulary of this section's new tactics but removes the state machine that chooses among them, and serves as an ablation baseline throughout @sec-cec2017 and @sec-engineering.
+
+## Reading the position
+
+Four exponentially-smoothed statistics ($\lambda=0.8$) are recomputed every iteration. The population's normalized divergence from the King,
+
+$$
+d(t) = \frac{1}{\mathrm{Lspan}\sqrt{D}} \cdot \frac{1}{N-1}\sum_{i=2}^{N} \lVert \mathbf{X}_i^{(t)} - \mathbf{K}^{(t)} \rVert_2 ,
+\qquad
+\tilde{d}(t) = 0.8\,\tilde{d}(t-1) + 0.2\, d(t),
+$$ {#eq-divergence}
+
+answers "is the position open or closed?", where $\mathrm{Lspan}=\max_j(u_j-l_j)$. Two further exponential moving averages track the initiative,
+
+$$
+\alpha(t) = 0.8\,\alpha(t-1) + 0.2 \cdot \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}[\text{move}_i \text{ accepted}],
+$$ {#eq-acceptance}
+
+and the technical success rate of the King's own local search,
+
+$$
+\varepsilon(t) =
+\begin{cases}
+0.8\,\varepsilon(t-1) + 0.2 & \text{en-passant capture succeeded at } t,\\
+0.8\,\varepsilon(t-1) & \text{otherwise.}
+\end{cases}
+$$ {#eq-epsilon}
+
+Finally, a stagnation counter borrows chess's *fifty-move rule*: rather than reset on any improvement whatsoever, it resets only on a materially significant one, exactly as fifty moves without a pawn push or a capture — not merely without a game-theoretically perfect move — are needed to claim a draw:
+
+$$
+s(t) =
+\begin{cases}
+0, & f(\mathbf{K}^{(t)}) < f_{\text{ref}} - \max\!\big(10^{-4}|f_{\text{ref}}|,\ 10^{-10}\big),\\[2pt]
+s(t-1) + 1, & \text{otherwise,}
+\end{cases}
+$$ {#eq-fifty-move}
+
+with $f_{\text{ref}}$ updated to $f(\mathbf{K}^{(t)})$ whenever $s(t)=0$. Early prototypes used a naive counter that reset on any improvement at all; because the en-passant rule of @sec-enpassant makes microscopic refinements routinely, that counter never accumulated enough to trigger the blockade response of @sec-blockade even in runs that were visibly stuck in a secondary basin for hundreds of iterations. Equation @eq-fifty-move is the fix.
+
+## Game phases
+
+The smoothed divergence and the fraction of the budget elapsed, $\phi(t)=t/T$, jointly select one of four phases:
+
+$$
+\text{phase}(t) =
+\begin{cases}
+\textsc{Opening}, & \tilde{d}(t) > 0.22,\\
+\textsc{Middlegame}, & 0.045 < \tilde{d}(t) \le 0.22,\\
+\textsc{Closed}, & \tilde{d}(t) \le 0.045 \text{ and } \phi(t) \le 0.5,\\
+\textsc{Endgame}, & \tilde{d}(t) \le 0.045 \text{ and } \phi(t) > 0.5.
+\end{cases}
+$$ {#eq-phase}
+
+The Closed phase answers a failure mode found during tuning: a population can collapse to a small radius around the King *early* in the search — a premature convergence, not a genuine endgame — and treating every low-divergence state as an endgame made this worse, since endgame tactics (heavy pinning, aggressive pawn advance) accelerate collapse rather than reversing it. Reading an early collapse as a **prematurely closed position** and answering with Nimzowitschian *prophylaxis* — restraint and reopening lines rather than immediate commitment — removes the pathology. Each phase activates a different parameter vector, summarized in @tbl-phase-schedule.
+
+| Phase | $p_{\text{pin}}$ | Leap mult. | $p_{\text{c}}$ | $p_{\text{DA}}$ | $p_{\text{intf}}$ | Pawn gain |
+|---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Opening | $0$ | $2.0$ | $0$ | $0$ | $0.30$ | $0.30$ |
+| Middlegame | $0.5\,\phi(t)$ | $1.0$ | $0.5$ | $0$ | $0.15$ | $0.30$ |
+| Closed | $0$ | $2.0$ | $0.5$ | $0.15$ | $0.15$ | $0.30$ |
+| Endgame | $0.1{+}0.75\,\phi(t)^{*}$ | $0.5$ | $0.7$ | $0.15$ | $0$ | $0.45$ |
+
+: Phase-conditioned tactical schedule. Pinning probability $p_{\text{pin}}$, knight-leap probability multiplier, council probability $p_{\text{c}}$, discovered-attack probability $p_{\text{DA}}$, interference probability $p_{\text{intf}}$, and pawn step gain, by phase. $^{*}$Endgame pinning is capped at $0.5$. {#tbl-phase-schedule tbl-colwidths="[16,20,12,10,10,15,13]"}
+
+One overlay applies regardless of phase. If the population has lost the initiative and the King's local search has gone quiet at the same time,
+
+$$
+\text{Zugzwang}(t) \iff \phi(t) > 0.2 \ \wedge\ \alpha(t) < 0.04 \ \wedge\ \varepsilon(t) < 0.05,
+$$ {#eq-zugzwang}
+
+the development coefficient is halved for that one iteration, $a(t)\leftarrow a(t)/2$ — a *triangulation* move: change nothing structurally, spend a tempo, and let the next reading of the position be more informative before committing to a new phase.
+
+## New tactical operators
+
+**Novotny interference (Bishops).** Named for the classical motif in which a piece is sacrificed on a square that blocks two enemy lines of defense at once, a Bishop is occasionally interposed on the segment between two distant, higher-ranked pieces rather than moving diagonally around the King:
+
+$$
+\mathbf{X}_i' = \beta\, \mathbf{X}_a + (1-\beta)\, \mathbf{X}_b + 0.02\, a(t)\, \mathbf{L} \circ \mathbf{z},
+\qquad \beta \sim \mathcal{U}(0.3, 0.7),\quad \mathbf{z} \sim \mathcal{N}(\mathbf{0}, \mathbf{I}),
+$$ {#eq-interference}
+
+with $a,b$ drawn without replacement from the fitter half of the population (probability $p_{\text{intf}}$, @tbl-phase-schedule). Being a convex recombination of two arbitrary population members rather than a step along a coordinate axis, it is rotation-invariant, and it is the mechanism most directly responsible for CA-v3's gains on the CEC-2017 hybrid and composition functions (@sec-cec2017).
+
+**The knight's fork.** With probability $0.5$, a Knight that does not take its exploratory leap instead plays
+
+$$
+\mathbf{X}_i' = \mathbf{X}_i + \mathbf{r} \circ (\mathbf{K} - \mathbf{X}_i) + 0.8\,(\mathbf{X}_a - \mathbf{X}_b), \qquad a, b \sim \mathcal{U}\{1,\dots,i-1\},\ \ \mathbf{r}\sim\mathcal{U}(0,1)^D,
+$$ {#eq-fork}
+
+drifting toward the King while inheriting the differential structure of two better-ranked peers at once — attacking two targets simultaneously, in the spirit of the tactic that gives the move its name.
+
+**Discovered attack.** An early version of this operator applied the geometry below to every Rook as a population move; tuning showed it tactically unsound at that scale, since the candidate is accepted by the ordinary improvement rule almost every time it is tried, collapsing the Rook sub-population onto the King–elite line within a handful of iterations. Restricted instead to a single, strictly elitist probe competing for one of the King's own en-passant trials — active only in the Closed and Endgame phases —
+
+$$
+\mathbf{Y}_{\text{DA}} = \mathbf{X}_e + u\,(\mathbf{K} - \mathbf{X}_e), \qquad u \sim \mathcal{U}(1.2, 2.2),\quad e \sim \mathcal{U}\{1,2,3\},
+$$ {#eq-discovered}
+
+it recovers the intended effect — probing the far side of the incumbent along an elite-King line — without the pathology. The lesson generalizes: a tactic sound for a single elite piece can destabilize a whole role class, just as a discovered attack that wins material for one player is a blunder if every piece on the board tries it at once.
+
+**Royal council.** Competing with the discovered attack for the same probe slot (mutually exclusive, selected by relative probability),
+
+$$
+\mathbf{Y}_{\text{council}} = \mathbf{K} + 1.5\,u\,(\mathbf{K} - \mathbf{c}), \qquad \mathbf{c} = \tfrac{1}{2}(\mathbf{X}_{\text{Q}_1} + \mathbf{X}_{\text{R}_1}),\quad u \sim \mathcal{U}(0,1),
+$$ {#eq-council}
+
+reflects the King away from the midpoint of the best Queen and best Rook. Where isotropic Gaussian probes are blind to the shape of the elite, this reflection is population-shaped: when the elite lies strung along a narrow curved valley — the typical geometry along an active inequality constraint in the engineering problems of @sec-engineering — it points down the valley rather than across it. This single mechanism was responsible for closing most of the welded-beam gap observed in early prototypes.
+
+**Windmill.** In the Endgame phase only, a successful en-passant or council capture with displacement $\boldsymbol{\delta}=\mathbf{K}^{(t)}-\mathbf{K}^{(t)}_{\text{pre}}$ is extended,
+
+$$
+\mathbf{K} \leftarrow \mathbf{K} + \boldsymbol{\delta} \quad \text{while } f(\mathbf{K}+\boldsymbol{\delta}) < f(\mathbf{K}),\quad \text{up to 3 repetitions,}
+$$ {#eq-windmill}
+
+echoing the chess windmill's repeating sequence of discovered checks, each one harvesting material.
+
+**Overprotection archive.** Aron Nimzowitsch's overprotection principle counsels defending a valuable point with more force than strictly necessary, so that pieces freed from other duties have a strong square to retreat to. CA-v3 archives up to five mutually distant past King positions,
+
+$$
+\text{admit } \mathbf{K}^{(t)} \iff f(\mathbf{K}^{(t)}) < f(\mathbf{K}^{(t-1)}) \ \wedge\ \min_{\mathbf{a}\in\mathcal{A}} \frac{\lVert \mathbf{K}^{(t)}-\mathbf{a}\rVert}{\mathrm{Lspan}\sqrt{D}} > 0.15,
+$$ {#eq-archive}
+
+evicting the worst by fitness on overflow. These strongpoints are the fallback used by the blockade response below.
+
+## Blockade: pawn break, King's march, and Tal's speculative sacrifice {#sec-blockade}
+
+When the fifty-move counter reaches $s(t) \ge 25$ (@eq-fifty-move), three mechanisms fire together. All Pawns are re-deployed uniformly at random — a *pawn break*, opening lines in a closed position. The King probes six long-radius candidates at three scales,
+
+$$
+\mathbf{Y}_m = \mathbf{K} + \rho_m\, \mathbf{L}\circ\mathbf{z}_m, \qquad \rho_m \in \{0.1,0.1,0.2,0.2,0.4,0.4\},\quad \mathbf{z}_m \sim \mathcal{N}(\mathbf{0},\mathbf{I}),
+$$ {#eq-march}
+
+then *consolidates* the best candidate with an eight-step greedy local refinement of shrinking radius before comparing it against the incumbent King. The order is deliberate: refine-then-compare lets the march accept a basin whose raw landing point is worse than the incumbent but whose refined optimum is better, while the final elitist comparison still guarantees the King's fitness sequence never worsens. Simultaneously, the sacrifice budget of @eq-sacrifice is reheated tenfold for the next ten iterations — a nod to Mikhail Tal's willingness to give up material for an initiative he could not yet fully calculate, rather than keep playing safe moves that have already stopped producing progress — and, if the archive of @eq-archive is non-empty, the worst-ranked Queen is replaced by a random archived strongpoint, giving the population a proven foothold rather than a blind restart.
+
+## Opening principle: opposition-based initialization
+
+The initial population is evaluated together with its reflection through the board's center, $\mathbf{X}^{(0)}_{\text{mirror}}=\mathbf{l}+\mathbf{u}-\mathbf{X}^{(0)}$, and the fitter half of the combined $2N$ candidates is kept. We report this honestly rather than dress it up: isolating this mechanism during tuning found a *mixed* effect — better on two of four micro-benchmark problems tested, worse on the other two — not a consistent gain. It is kept by default because it never produced a large regression and costs only one extra population evaluation, paid once; a dedicated ablation across the full CEC-2017 suite is future work.
+
 # Benchmark Experiments {#sec-benchmarks}
 
 ## Experimental protocol
@@ -376,7 +518,81 @@ Read together, the tables support a differentiated verdict rather than a slogan.
 
 Against GWO the story reverses: GWO is significantly better on all six classical benchmarks, consistent with the aggressive exploitation it is known for on exactly this suite [@mirjalili2014gwo]. We see no point in arguing with that result. On standard unconstrained test functions, CA does not overtake GWO, full stop.
 
-What should a practitioner take from this? The rankings are problem-dependent — precisely the situation @wolpert1997nfl predicts — so the interesting question is not whether CA wins on Sphere but whether it holds up on structured engineering problems. That is where we go next, and the ranking does change there.
+What should a practitioner take from this? The rankings are problem-dependent — precisely the situation @wolpert1997nfl predicts — so the interesting question is not whether CA wins on Sphere but whether it holds up on a harder, standardized synthetic suite and on structured engineering problems. That is where we go next: @sec-cec2017 extends the comparison to the full CEC-2017 suite using the adaptive CA-v3 of @sec-ca-v3, @sec-engineering turns to constrained engineering design, and @sec-transport returns to the transportation motivation that opened the paper — and the ranking does change.
+
+# The Full CEC-2017 Benchmark Suite {#sec-cec2017}
+
+## Motivation and roster
+
+The six-function suite of @sec-benchmarks is standard but small, and by the standards this literature has settled on since — including our own baseline, GWO [@mirjalili2014gwo] — a serious claim of competitiveness is expected to survive a larger, harder, and independently curated suite. CEC-2017 supplies exactly that: 29 functions, shifted, rotated, and in many cases built by hybridizing or composing several base functions so that an algorithm cannot exploit coordinate-axis alignment or a single basin shape. We evaluate CA-v3 (@sec-ca-v3) and its non-adaptive ablation CA-v2 against GWO, PSO, GA (our own implementations from @sec-benchmarks), and WOA [@mirjalili2016whale] (third-party, `mealpy` defaults, as in @sec-mealpy), at $D=30$ with population $30$, $500$ iterations, and $30$ independent runs per algorithm–function pair, run $r$ of every algorithm sharing seed $\text{SEED}_0+r$ on the unit hypercube (real bounds folded into the decoder, as throughout this paper).
+
+## Data integrity: auditing the reference implementation {#sec-opfunu-audit}
+
+CEC-2017 was accessed through `opfunu` v1.0.1, a third-party Python port of the official suite, and two independent checks were applied before any result was trusted. First, every candidate function was evaluated at the library's own reported global optimizer $\mathbf{x}^{*}$, requiring $|f(\mathbf{x}^{*})-f^{*}| \le 10^{-6}\max(1,|f^{*}|)$; this is a necessary but not sufficient check, since it verifies the function only at one point and says nothing about the rest of the domain. Second, we required the landscape to be discriminative: F5 (Shifted-and-Rotated Schaffer F7) passed the first check exactly ($f(\mathbf{x}^{*})=f^{*}=500.0$) but random samples spanning the entire search box returned values between $500.15$ and $500.55$ — a surface so nearly flat that no optimizer, ours or any competitor's, could extract a meaningful gradient from it — and was excluded on that basis.
+
+A function can pass both of those checks and still be broken elsewhere in the domain. Four further functions were caught only empirically, during optimization itself, because every algorithm in the roster — not CA specifically — returned a best-of-30-runs value definitionally impossible under a correct $f^{*}$:
+
+{{< include results/table_opfunu_audit.md >}}
+
+: Post-hoc integrity audit: functions where at least one algorithm's best run fell below the library's claimed global optimum, evidence of an implementation defect rather than an artifact of any one algorithm's search behavior. {#tbl-opfunu-audit}
+
+F21 is the most severe case: essentially every algorithm in the roster, including the weakest, found points the library's own optimum could not explain. All five functions (F5, F9, F15, F19, F21) are excluded from the analysis below, leaving **24 validated functions**; the full pre-audit numbers are kept on record in the repository for transparency rather than quietly dropped.
+
+## Results
+
+@tbl-cec2017-ranks reports the mean Friedman rank of each algorithm across the 24 functions, and @tbl-cec2017-wtl the win/tie/loss record of CA-v3 against each competitor under a two-sided Wilcoxon rank-sum test at $\alpha=0.05$. The full per-function statistics are in @tbl-cec2017-stats; @fig-cec2017 shows median convergence on six representative functions spanning unimodal, multimodal, hybrid, and composition landscapes.
+
+{{< include results/table_cec2017_ranks.md >}}
+
+: Mean Friedman rank across 24 validated CEC-2017 functions (lower is better; $\chi^2=87.40$, $p=2.4\times10^{-17}$). {#tbl-cec2017-ranks}
+
+{{< include results/table_cec2017_wtl.md >}}
+
+: CA-v3 win/tie/loss against each competitor, CEC-2017, 24 functions, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-cec2017-wtl}
+
+![Median convergence on six representative CEC-2017 functions (30 runs, semi-log scale).](figures/cec2017_convergence.png){#fig-cec2017 fig-align="center" width="100%"}
+
+::: {.content-visible when-format="html"}
+The full 24-function table (mean and standard deviation per algorithm, best mean per function in bold) is long; it is included below and is also available as a standalone file at [`results/table_cec2017_stats.md`](results/table_cec2017_stats.md).
+:::
+
+{{< include results/table_cec2017_stats.md >}}
+
+: Mean, standard deviation, best, and worst final error $f-f^{*}$ over 30 runs, all 24 validated CEC-2017 functions (best mean per function in bold). {#tbl-cec2017-stats}
+
+## Discussion
+
+CA-v3 takes the best mean Friedman rank of the six algorithms compared ($2.000$), narrowly ahead of GA ($2.167$) and CA-v2 ($2.208$), and well ahead of PSO ($4.375$), GWO ($4.417$), and WOA ($5.833$). Against GWO, PSO, and WOA the record is close to a sweep — $23/24$, $21/24$, and $24/24$ wins respectively, with not a single loss to any of the three. Against its own non-adaptive ablation, CA-v2, the adaptive machinery of @sec-ca-v3 wins $4$ and loses $2$ of $24$, with $18$ ties: a real but modest net gain, which is the expected signature of a well-tuned control layer added on top of an already-competitive base algorithm rather than a wholesale replacement of it.
+
+The one comparison that does not flatter CA-v3 is against GA, where the near-tied mean rank conceals a $7$-win / $7$-tie / $10$-loss record function by function. The ten losses are not scattered at random: they are F4, F11, F12, F16, F20, F22, and F24–F27 — Rastrigin-family, hybrid, and composition landscapes whose basins are separated by distances comparable to the search domain itself. GA's BLX-$\alpha$ crossover routinely proposes offspring *outside* the interval spanned by two parents, an operator that can relocate a candidate across the entire domain in a single step. Every CA-v3 operator introduced in @sec-ca-v3, by contrast, is anchored to the King, an elite peer, or a bounded local neighborhood; even the Knight's exploratory leap resamples only two of thirty coordinates. This is not a flaw to be argued away so much as a clean illustration of the No-Free-Lunch theorem [@wolpert1997nfl]: CA-v3 was tuned specifically against constrained engineering geometry and smooth hybrid/composition exploitation (@sec-ca-v3), and that specialization has a measurable opportunity cost on landscapes whose defining difficulty is long-range, unstructured basin-hopping. We return to this trade-off, and to a concrete proposal for closing it, in @sec-conclusions.
+
+# Constrained Engineering Design Benchmarks {#sec-engineering}
+
+## Problems and roster
+
+Alongside standardized synthetic suites, it is standard practice in this literature to validate a new metaheuristic on the small set of constrained engineering design problems that recur across dozens of published comparisons — precisely because a shared, literature-anchored problem lets a reader compare our numbers against results we did not produce ourselves. We use seven such problems in their commonly published formulations: welded beam design, tension/compression spring design, pressure vessel design, speed reducer design, three-bar truss design, gear train design, and cantilever beam design. Constraints are handled by the same static-penalty approach used elsewhere in this paper (@sec-mealpy): $f_{\text{pen}}(\mathbf{x}) = f(\mathbf{x}) + 10^{6}\sum_i \max(0, g_i(\mathbf{x}))^2$. Roster and protocol are identical to @sec-cec2017 (CA-v3, CA-v2, GWO, PSO, GA, WOA; population 30, 500 iterations, 30 runs).
+
+## Results
+
+@tbl-engineering-ranks reports the mean Friedman rank of each algorithm across the seven problems, @tbl-engineering-wtl the win/tie/loss record of CA-v3 against each competitor, and @tbl-engineering-stats the full per-problem statistics; @fig-engineering shows median convergence on all seven.
+
+{{< include results/table_engineering_ranks.md >}}
+
+: Mean Friedman rank across the 7 engineering design problems (lower is better; $\chi^2=17.61$, $p=0.0035$). {#tbl-engineering-ranks}
+
+{{< include results/table_engineering_wtl.md >}}
+
+: CA-v3 win/tie/loss against each competitor, engineering design problems, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-engineering-wtl}
+
+![Median convergence on the seven engineering design problems (30 runs, semi-log scale).](figures/engineering_convergence.png){#fig-engineering fig-align="center" width="100%"}
+
+{{< include results/table_engineering_stats.md >}}
+
+: Mean, standard deviation, best, and worst objective over 30 runs, all 7 engineering design problems (best mean per problem in bold). {#tbl-engineering-stats tbl-colwidths="[16,16,15,14,14,15]"}
+
+## Discussion
+
+CA-v3 again takes the best mean Friedman rank ($2.000$), ahead of CA-v2 ($2.286$), GWO ($3.143$), PSO ($3.714$), GA ($4.286$), and WOA ($5.571$). Its record here is close to a clean sweep: across all $35$ pairwise comparisons against the five competitors, CA-v3 loses exactly once — to PSO on the welded-beam problem, where PSO's near-zero run-to-run variance around the known optimum ($1.7251 \pm 0.0010$) is difficult for any method that retains meaningful exploration to match on a low-dimensional, well-conditioned landscape. One further observation is worth flagging plainly: WOA under `mealpy`'s default hyperparameters is dramatically unstable on several of these constrained problems — its mean objective on welded beam is $172.6$, two orders of magnitude above the optimum of $1.725$, driven by a small number of catastrophically infeasible runs (@fig-engineering, top-left panel) — a reminder that default hyperparameters tuned for unconstrained synthetic benchmarks do not automatically transfer to constrained, penalty-shaped landscapes.
 
 # Transportation Application: Arterial Signal Coordination {#sec-transport}
 
@@ -448,6 +664,10 @@ The best plan discovered (by CA) selects the minimum cycle, $C = 60$ s — a sen
 
 The offsets form a coherent progression pattern in which consecutive intersections alternate between favoring the eastbound and the westbound platoon — the compromise structure one expects on a heavily loaded two-way arterial.
 
+## Revisiting the arterial problem with CA-v3
+
+The results above use the base CA of @sec-ca. As a sanity check before extending the adaptive machinery of @sec-ca-v3 to the larger benchmarks of @sec-cec2017 and @sec-engineering, we re-ran this exact problem — same seeds, same protocol — with CA-v2 and CA-v3. The improvement is not marginal: CA-v3's mean delay ($169.96$ veh$\cdot$h/h) is significantly better than both GWO ($p=0.0097$) and the base CA ($p=0.0085$), and its *median* run ($166.5261$) lands on the best solution found by any method across every algorithm and every version of CA tested — meaning more than half of CA-v3's thirty runs reach that optimum, not merely its best run. On the berth-allocation problem, CA-v2 reaches the lowest mean ($7{,}693$, statistically tied with GWO) and the best individual plan of any CA version ($5{,}433$, a $11.8\%$ gap to the known optimum, against the $45\%$ gap of the base CA reported in @sec-mealpy below); CA-v3 improves on the base CA here too ($7{,}934$ mean) without quite matching CA-v2. Read together with @sec-cec2017 and @sec-engineering, the pattern is consistent: the adaptive state machine helps most where a landscape rewards phase-appropriate tactics, and the plain operator set of CA-v2 remains a strong, simpler alternative when it does not.
+
 ## Practical remarks
 
 For a transportation agency the message is straightforward: CA can be used on signal-coordination studies with the same confidence as GA or PSO, and it brings two features practitioners may actually care about. The sacrifice mechanism offers a principled escape from poor offset basins without restarting the search, and the en-passant refinement polishes splits and offsets to fine precision late in the run without a bolt-on local search stage. Extending to cycle-by-cycle stochastic simulation objectives (VISSIM- or SUMO-in-the-loop) is mechanically trivial, since CA needs nothing but function values.
@@ -502,40 +722,48 @@ CA's best run sits $45\%$ above the true optimum — a substantial gap, and we d
 
 We want to be precise about the scope of this comparison. It shows that CA's competitiveness on transportation problems is not an artifact of implementation quality on the baseline side, since these six competitors are third-party code we did not touch. It does not show that CA is close to solving berth allocation to global optimality — a $45\%$ gap is real and the problem plainly deserves algorithms better tuned to its combinatorial structure than any of the seven general-purpose metaheuristics tested here. What we take from this section is narrower and, we think, still useful: among seven general-purpose population metaheuristics run with default settings and no problem-specific engineering, CA reaches the best and most consistently feasible solutions on both transportation instances tested.
 
-# Conclusions and Future Work
-
-# Conclusions and Future Work
+# Conclusions and Future Work {#sec-conclusions}
 
 ## Summary of findings
 
-This paper introduced the Chess Algorithm, a population-based metaheuristic whose defining feature is a heterogeneous-role architecture: agents dynamically assume the roles of Queens, Rooks, Bishops, Knights, and Pawns around an elite King, each with its own movement geometry, while five strategic mechanisms from chess theory — development, sacrifice, pinning, castling, en passant — plus a threefold-repetition rule govern the search.
+This paper introduced the Chess Algorithm, a population-based metaheuristic whose defining feature is a heterogeneous-role architecture: agents dynamically assume the roles of Queens, Rooks, Bishops, Knights, and Pawns around an elite King, each with its own movement geometry, while five strategic mechanisms from chess theory — development, sacrifice, pinning, castling, en passant — plus a threefold-repetition rule govern the search. We then extended it into CA-v3, an adaptive variant in which a state machine reads the divergence, initiative, and local-search success of the population each iteration and switches among opening, middlegame, closed-position, and endgame tactical repertoires, adding Novotny interference, the knight's fork, the royal council, a King's-march blockade response, and a Tal-style speculative-sacrifice reheat (@sec-ca-v3).
 
-Stated with the restraint they deserve, the findings are these. On six classical 30-dimensional benchmarks under matched budgets, CA significantly outperforms GA, PSO, and SA on most of the suite (all six functions against PSO and SA; four of six against GA, with ties on Rosenbrock and Rastrigin). GWO remains significantly stronger than CA on that classical suite, and we regard this as an accurate placement of a first-generation algorithm rather than a defect to argue away. On the eight-intersection arterial problem, CA is statistically indistinguishable from GA, PSO, and GWO and attains the best solution found by any method. And against six third-party implementations from the `mealpy` library — algorithms none of us wrote a line of — CA is significantly better on both transportation instances tested, including a continuous berth allocation problem with a known optimum, where it also produces the only fully feasible best-found plan among the strongest competitors.
+Stated with the restraint they deserve, the findings are these. On six classical 30-dimensional benchmarks under matched budgets, the base CA significantly outperforms GA, PSO, and SA on most of the suite, while GWO remains significantly stronger on that classical suite — an accurate placement of a first-generation algorithm rather than a defect to argue away (@sec-benchmarks). On the full CEC-2017 suite — 24 functions validated through a two-stage data-integrity audit that identified and excluded five defective third-party implementations, including one (F21) where every algorithm in our six-algorithm roster returned values thousands of units below the library's own claimed optimum — CA-v3 takes the best mean Friedman rank among CA-v3, CA-v2, GWO, PSO, GA, and WOA, losing not a single one of 24 comparisons to GWO or WOA and only 3 of 24 to PSO (@sec-cec2017). On seven classic constrained engineering design problems under the same roster, CA-v3 again ranks first, losing exactly once across 35 pairwise comparisons (@sec-engineering). On the eight-intersection arterial signal-timing problem, CA-v3 is significantly better than both GWO and the base CA, with more than half its runs reaching the best delay found by any method in the paper (@sec-transport). And against six third-party implementations from the `mealpy` library — algorithms none of us wrote a line of — the base CA is significantly better on both transportation instances tested, including a continuous berth allocation problem with a known optimum, where it also produces the only fully feasible best-found plan among the strongest competitors; CA-v2 improves that instance's optimality gap further, from 45% to 11.8% (@sec-mealpy).
+
+The one result that does not flatter CA-v3 is honestly reported rather than smoothed over: against GA on CEC-2017 it wins 7, ties 7, and loses 10 of 24 functions, and the ten losses cluster tightly on Rastrigin-family, hybrid, and composition landscapes whose basins are separated by distances comparable to the search domain itself — precisely where GA's BLX-$\alpha$ crossover, which can relocate a candidate solution across the entire domain in one step, has a structural advantage over every CA-v3 operator, each of which is anchored to the King, an elite peer, or a bounded local neighborhood. We read this as the No-Free-Lunch theorem [@wolpert1997nfl] doing its job, not as a result to argue away, and return to it below.
 
 ## Limitations
 
-The boundaries of the evidence should be stated as plainly as the results. The benchmark suite, though standard, covers six functions at one dimensionality; CEC composition suites and scalability studies at 50–100 dimensions remain to be run. CA consumes roughly ten percent more function evaluations than the baselines through its en-passant and castling probes — disclosed throughout, and far too small to explain order-of-magnitude gaps, but an overhead nonetheless. The transportation studies use analytic delay and penalty models rather than microsimulation. CA's parameters were fixed a priori and their sensitivity is unquantified. And wall-clock cost per iteration, while of the same order as the baselines, was never the object of optimization.
+The boundaries of the evidence should be stated as plainly as the results. Scalability beyond $D=30$ is untested; CEC-2017 studies at 50–100 dimensions remain future work. CA consumes roughly ten to fifteen percent more function evaluations than the baselines through its en-passant, castling, and (for CA-v3) blockade probes — disclosed throughout, and far too small to explain the order-of-magnitude gaps reported in @sec-cec2017, but an overhead nonetheless. The transportation studies use analytic delay and penalty models rather than microsimulation. CA and CA-v3's parameters were fixed a priori from a single round of tuning on a four-problem micro-benchmark (documented internally) rather than a systematic sensitivity sweep; the opposition-based initialization of @sec-ca-v3 in particular showed a mixed effect in that tuning (helpful on two of four problems, unhelpful on the other two) and we report that honestly rather than claim a clean win. Wall-clock cost per iteration, while of the same order as the baselines, was never the object of optimization. And the CA-v3 vs. GA comparison of @sec-cec2017 identifies, but does not yet close, a specific class of landscape — long-range, unstructured, multimodal — where CA-v3's currently local operator vocabulary is under-powered relative to GA's macro-scale crossover.
 
 ## Future work
 
-Several directions strike us as natural. Binary, discrete, and multi-objective variants of CA are the obvious first step — a Pareto "King's court" of nondominated solutions fits the role architecture almost too neatly. Hybridization is another: replacing the pawn operator with differential-evolution mutation, or switching on the Lévy-flight knight leap (@eq-levy), are one-line experiments in the released code. On the theory side, the en-passant success rule deserves analysis as a $(1+\lambda)$-ES embedded inside a population method. On the applications side, network-wide signal optimization, transit network design, and simulation-based optimization [@osorio2013simulation] are all within reach of the same interface. And a systematic ablation study — knocking out each chess mechanism in turn — is the right way to find out which pieces actually carry the game.
+Several directions strike us as natural, and one is now considerably more concrete than the others. The CA-v3 vs. GA result above motivates a chess-native answer to long-range basin-hopping: a *pawn promotion* operator, in which an agent that survives several consecutive blockade events (@sec-ca-v3) without producing a King improvement is, for one iteration, promoted from the bounded local geometry of @sec-ca-v3 to a BLX-$\alpha$-style macro-crossover against a distant population member — a discontinuous, large-scale change in capability, exactly as a pawn reaching the eighth rank is not incrementally improved but instantly becomes the most powerful piece on the board. A related framing, drawn from the chess variant Bughouse/Crazyhouse, would instead "drop" a coordinate subset of one agent onto an unrelated one, a cross-dimensional recombination distinct from the segment-local Novotny interference already in CA-v3. Neither proposal is implemented or benchmarked here; both are natural next steps precisely because this paper's evidence identifies, rather than merely speculates about, the landscape class where they would matter.
+
+Beyond that, binary, discrete, and multi-objective variants of CA are an obvious further step — a Pareto "King's court" of nondominated solutions fits the role architecture almost too neatly. Hybridization is another: replacing the pawn operator with differential-evolution mutation, or switching on the Lévy-flight knight leap (@eq-levy), are one-line experiments in the released code. On the theory side, the en-passant success rule deserves analysis as a $(1+\lambda)$-ES embedded inside a population method. On the applications side, network-wide signal optimization, transit network design, and simulation-based optimization [@osorio2013simulation] are all within reach of the same interface. And a systematic ablation study — knocking out each CA-v3 mechanism in turn, extending the CA-v3-versus-CA-v2 comparison already reported in @sec-cec2017 and @sec-engineering to each mechanism individually — is the right way to find out which pieces actually carry the game.
 
 ## Closing remark
 
-Chess players are taught to judge a move not by the material it wins immediately but by the position it creates. The same standard should apply to a new metaheuristic: CA's value will be decided not by its row in any single benchmark table but by whether its heterogeneous-role architecture opens useful positions for the optimization problems of transportation engineering. On the evidence assembled here, the opening has been played soundly.
+Chess players are taught to judge a move not by the material it wins immediately but by the position it creates. The same standard should apply to a new metaheuristic: CA's value will be decided not by its row in any single benchmark table but by whether its heterogeneous-role architecture — and, in its adaptive form, its capacity to recognize which tactic a given position calls for — opens useful positions for global optimization and for the transportation-network problems that motivated it. On the evidence assembled here, across six classical functions, twenty-four audited CEC-2017 functions, seven engineering design problems, and two transportation applications, the opening has been played soundly, and knowing when to change strategy in the middlegame has made it stronger still.
 
 # Data and code availability {.unnumbered}
 
 All source code, experiment scripts, results, and manuscript sources are openly available at [github.com/sabernaseralavi-60/2026_Chess-Algorithm](https://github.com/sabernaseralavi-60/2026_Chess-Algorithm); the rendered article is served at [sabernaseralavi-60.github.io/2026_Chess-Algorithm](https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/), with the PDF at [`paper.pdf`](paper.pdf). A Persian translation (`paper-fa.qmd`) is included in the repository and can be rendered locally to Word with Quarto. Every figure and table in this paper is generated by committed scripts:
 
 ```bash
-python src/run_benchmarks.py      # benchmark experiments
-python src/traffic_case_study.py  # arterial signal timing case study
-python src/mealpy_comparison.py   # extended third-party comparison
-quarto render                     # build HTML + PDF + Persian docx
+python src/run_benchmarks.py            # six-function benchmark experiments (@sec-benchmarks)
+python src/traffic_case_study.py        # arterial signal timing case study (@sec-transport)
+python src/mealpy_comparison.py         # extended third-party comparison (@sec-mealpy)
+python src/phase1_sanity_check.py       # CA-v2/v3 re-run of the transportation problems
+python src/cec2017_full_run.py --part i/4   # full CEC-2017 suite, i = 0..3 (@sec-cec2017)
+python src/engineering_full_run.py      # 7 engineering design problems (@sec-engineering)
+python src/phase2_3_analysis.py         # merge, data-integrity audit, Friedman/Wilcoxon, figures
+python src/generate_markdown_tables.py  # this paper's CEC-2017 / engineering result tables
+python src/generate_latex_tables.py     # camera-ready LaTeX tables (results/latex_tables_final.tex)
+quarto render                           # build HTML + PDF + Persian docx
 ```
 
-Random seeds are fixed in the scripts; the results in this paper correspond exactly to the committed outputs in `results/` and `figures/`.
+The Chess Algorithm itself ships three variants in `src/algorithms.py`: `chess_algorithm` (CA, @sec-ca), `chess_algorithm_v2` (the non-adaptive ablation used throughout @sec-cec2017 and @sec-engineering), and `chess_algorithm_v3` (the adaptive variant of @sec-ca-v3). Random seeds are fixed in every script; the results in this paper correspond exactly to the committed outputs in `results/` and `figures/`. The CEC-2017 data-integrity audit of @sec-opfunu-audit is likewise reproducible rather than asserted: `results/cec2017_stats_raw_unaudited.csv` retains the pre-audit numbers for F5, F9, F15, F19, and F21 alongside the validated results, so a reader can re-run the same check against a newer `opfunu` release rather than take our exclusion list on faith. Readers who want the detailed per-function and per-problem tables in camera-ready LaTeX rather than the paper's own tables may use `results/latex_tables_final.tex` directly.
 
 # About the corresponding author {.unnumbered}
 
