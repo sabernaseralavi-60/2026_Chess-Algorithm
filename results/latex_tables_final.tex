@@ -16,9 +16,9 @@
 \toprule
 Algorithm & Mean Friedman rank \\
 \midrule
-\textbf{CA-v3} & \textbf{2.000} \\
+\textbf{CA} & \textbf{2.000} \\
 GA & 2.167 \\
-CA-v2 & 2.208 \\
+CA-static & 2.208 \\
 PSO & 4.375 \\
 GWO & 4.417 \\
 WOA & 5.833 \\
@@ -28,13 +28,13 @@ WOA & 5.833 \\
 
 \begin{table}[htbp]
 \centering
-\caption{CEC-2017: CA-v3 win/tie/loss against each competitor (Wilcoxon rank-sum, $\alpha=0.05$, 24 functions).}
+\caption{CEC-2017: CA win/tie/loss against each competitor (Wilcoxon rank-sum, $\alpha=0.05$, 24 functions).}
 \label{tab:cec2017-wtl}
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Competitor & Win & Tie & Loss \\
 \midrule
-CA-v2 & 4 & 18 & 2 \\
+CA-static & 4 & 18 & 2 \\
 GWO & 23 & 1 & 0 \\
 PSO & 21 & 3 & 0 \\
 GA & 7 & 7 & 10 \\
@@ -44,15 +44,15 @@ WOA & 24 & 0 & 0 \\
 \end{table}
 
 \begin{longtable}{@{}lcccccc@{}}
-\caption{CEC-2017 results (D=30): mean error $f-f^{*}$ over 30 runs, best mean per function in bold. Superscripts mark CA-v3 vs. the column algorithm under a two-sided Wilcoxon rank-sum test at $\alpha=0.05$: $^{+}$ column algorithm significantly better, $^{-}$ column algorithm significantly worse, $^{=}$ not significant. F5, F9, F15, F19, and F21 are excluded (see Section~\ref{sec:opfunu-audit}).}
+\caption{CEC-2017 results (D=30): mean error $f-f^{*}$ over 30 runs, best mean per function in bold. Superscripts mark CA vs. the column algorithm under a two-sided Wilcoxon rank-sum test at $\alpha=0.05$: $^{+}$ column algorithm significantly better, $^{-}$ column algorithm significantly worse, $^{=}$ not significant. F5, F9, F15, F19, and F21 are excluded (see Section~\ref{sec:opfunu-audit}).}
 \label{tab:cec2017-detail}\\
 \toprule
-Func & CA-v3 & CA-v2 & GWO & PSO & GA & WOA \\
+Func & CA & CA-static & GWO & PSO & GA & WOA \\
 \midrule
 \endfirsthead
 \multicolumn{7}{c}{\tablename\ \thetable{} -- continued}\\
 \toprule
-Func & CA-v3 & CA-v2 & GWO & PSO & GA & WOA \\
+Func & CA & CA-static & GWO & PSO & GA & WOA \\
 \midrule
 \endhead
 \bottomrule
@@ -93,8 +93,8 @@ F29 & \textbf{87996 (1.2\times 10^{5})} & 2.22\times 10^{5} (2.6\times 10^{5})$^
 \toprule
 Algorithm & Mean Friedman rank \\
 \midrule
-\textbf{CA-v3} & \textbf{2.000} \\
-CA-v2 & 2.286 \\
+\textbf{CA} & \textbf{2.000} \\
+CA-static & 2.286 \\
 GWO & 3.143 \\
 PSO & 3.714 \\
 GA & 4.286 \\
@@ -105,13 +105,13 @@ WOA & 5.571 \\
 
 \begin{table}[htbp]
 \centering
-\caption{Engineering design problems: CA-v3 win/tie/loss against each competitor (Wilcoxon rank-sum, $\alpha=0.05$, 7 problems).}
+\caption{Engineering design problems: CA win/tie/loss against each competitor (Wilcoxon rank-sum, $\alpha=0.05$, 7 problems).}
 \label{tab:engineering-wtl}
 \begin{tabular}{@{}lccc@{}}
 \toprule
 Competitor & Win & Tie & Loss \\
 \midrule
-CA-v2 & 1 & 6 & 0 \\
+CA-static & 1 & 6 & 0 \\
 GWO & 3 & 4 & 0 \\
 PSO & 4 & 2 & 1 \\
 GA & 6 & 1 & 0 \\
@@ -127,7 +127,7 @@ WOA & 7 & 0 & 0 \\
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}llcccccc@{}}
 \toprule
-Problem ($f_{\mathrm{ref}}$) & Stat & CA-v3 & CA-v2 & GWO & PSO & GA & WOA \\
+Problem ($f_{\mathrm{ref}}$) & Stat & CA & CA-static & GWO & PSO & GA & WOA \\
 \midrule
 \multirow{2}{*}{Welded Beam (1.72)} & Mean & 1.77 & 1.78$^{=}$ & 1.73$^{=}$ & \textbf{1.73$^{+}$} & 1.80$^{-}$ & 173$^{-}$ \\
  & Std & 0.11 & 0.13 & 0.0014 & 0.0010 & 0.092 & 910 \\

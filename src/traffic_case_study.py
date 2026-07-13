@@ -43,7 +43,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from algorithms import ALGORITHMS
+from algorithms import (chess_algorithm_v3, chess_algorithm_v2,
+                        genetic_algorithm, particle_swarm, grey_wolf)
 
 # ----------------------------------------------------------------------
 # Network data
@@ -159,9 +160,18 @@ def make_unit_objective():
 # ----------------------------------------------------------------------
 POP, ITERS, RUNS = 30, 300, 30
 SEED0 = 20260704
-ALGS = ["CA", "GA", "PSO", "GWO"]
-COLORS = {"CA": "#1a1a2e", "GA": "#c0392b", "PSO": "#2980b9", "GWO": "#27ae60"}
-STYLES = {"CA": "-", "GA": "--", "PSO": "-.", "GWO": (0, (3, 1, 1, 1))}
+# "CA" is the adaptive Chess Algorithm; "CA-static" is the same operator
+# set with the adaptive phase-selection machinery disabled (the ablation
+# baseline used throughout this paper).
+ALGORITHMS = {
+    "CA": chess_algorithm_v3, "CA-static": chess_algorithm_v2,
+    "GA": genetic_algorithm, "PSO": particle_swarm, "GWO": grey_wolf,
+}
+ALGS = ["CA", "CA-static", "GA", "PSO", "GWO"]
+COLORS = {"CA": "#1a1a2e", "CA-static": "#5b6ee1", "GA": "#c0392b",
+          "PSO": "#2980b9", "GWO": "#27ae60"}
+STYLES = {"CA": "-", "CA-static": (0, (4, 1)), "GA": "--", "PSO": "-.",
+          "GWO": (0, (3, 1, 1, 1))}
 
 plt.rcParams.update({
     "font.family": "serif", "font.size": 10,

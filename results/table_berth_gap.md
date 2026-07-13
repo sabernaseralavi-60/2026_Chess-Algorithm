@@ -1,6 +1,6 @@
 | Algorithm | Best objective (min) | Gap to optimum | Overlap of best plan (min·m) |
 |---|---:|---:|---:|
-| CA | 7056.4 | 45.19% | 0.0 |
+| CA | 6277.9 | 29.17% | 0.0 |
 | WOA | 9388.5 | 93.18% | 878.9 |
 | SCA | 19217.2 | 295.42% | 11752.0 |
 | ALO | 7345.0 | 51.13% | 0.0 |

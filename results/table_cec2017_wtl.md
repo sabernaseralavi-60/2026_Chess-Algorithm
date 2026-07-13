@@ -1,6 +1,6 @@
 | Competitor | Win | Tie | Loss |
 |---|---:|---:|---:|
-| CA-v2 | 4 | 18 | 2 |
+| CA-static | 4 | 18 | 2 |
 | GWO | 23 | 1 | 0 |
 | PSO | 21 | 3 | 0 |
 | GA | 7 | 7 | 10 |

@@ -26,17 +26,28 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from benchmark_functions import BENCHMARKS
-from algorithms import ALGORITHMS
+from algorithms import (chess_algorithm_v3, chess_algorithm_v2,
+                        genetic_algorithm, particle_swarm,
+                        simulated_annealing, grey_wolf)
 
 # ----------------------------------------------------------------------
 DIM, POP, ITERS, RUNS = 30, 30, 500, 30
 SEED0 = 20260703
 OUT_RES, OUT_FIG = "../results", "../figures"
 
-ALG_ORDER = ["CA", "GA", "PSO", "SA", "GWO"]
-COLORS = {"CA": "#1a1a2e", "GA": "#c0392b", "PSO": "#2980b9",
-          "SA": "#8e44ad", "GWO": "#27ae60"}
-STYLES = {"CA": "-", "GA": "--", "PSO": "-.", "SA": ":", "GWO": (0, (3, 1, 1, 1))}
+# "CA" is the adaptive Chess Algorithm; "CA-static" is the same operator
+# set with the adaptive phase-selection machinery disabled, used
+# throughout this paper as the ablation baseline.
+ALGORITHMS = {
+    "CA": chess_algorithm_v3, "CA-static": chess_algorithm_v2,
+    "GA": genetic_algorithm, "PSO": particle_swarm,
+    "SA": simulated_annealing, "GWO": grey_wolf,
+}
+ALG_ORDER = ["CA", "CA-static", "GA", "PSO", "SA", "GWO"]
+COLORS = {"CA": "#1a1a2e", "CA-static": "#5b6ee1", "GA": "#c0392b",
+          "PSO": "#2980b9", "SA": "#8e44ad", "GWO": "#27ae60"}
+STYLES = {"CA": "-", "CA-static": (0, (4, 1)), "GA": "--", "PSO": "-.",
+          "SA": ":", "GWO": (0, (3, 1, 1, 1))}
 
 plt.rcParams.update({
     "font.family": "serif", "font.size": 10,
