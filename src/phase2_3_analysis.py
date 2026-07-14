@@ -32,15 +32,17 @@ RESULTS = os.path.join(ROOT, "results")
 FIGURES = os.path.join(ROOT, "figures")
 os.makedirs(FIGURES, exist_ok=True)
 
-ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA"]
+ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA", "L-SHADE", "CMA-ES"]
 
 # identity palette (validated: lightness band, chroma floor, CVD
 # separation, contrast — all PASS on light surface) + line styles as
 # secondary encoding for print/CVD
 COLORS = {"CA": "#1d4ed8", "CA-static": "#c2410c", "GWO": "#059669",
-          "PSO": "#be123c", "GA": "#a16207", "WOA": "#9333ea"}
+          "PSO": "#be123c", "GA": "#a16207", "WOA": "#9333ea",
+          "L-SHADE": "#0891b2", "CMA-ES": "#65a30d"}
 STYLES = {"CA": "-", "CA-static": "--", "GWO": "-.", "PSO": ":",
-          "GA": (0, (3, 1, 1, 1)), "WOA": (0, (5, 2))}
+          "GA": (0, (3, 1, 1, 1)), "WOA": (0, (5, 2)),
+          "L-SHADE": (0, (1, 1)), "CMA-ES": (0, (4, 1, 1, 1, 1, 1))}
 
 plt.rcParams.update({
     "font.family": "serif", "font.size": 10,
@@ -152,8 +154,8 @@ def cec_figure(raw):
         ax.set_xlabel("Iteration", fontsize=8)
         ax.set_ylabel("Median error $f - f^{*}$", fontsize=8)
     handles, labels = axes[0, 0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=6, frameon=False,
-               fontsize=9)
+    fig.legend(handles, labels, loc="lower center", ncol=8, frameon=False,
+               fontsize=8.5)
     fig.tight_layout(rect=(0, 0.06, 1, 1))
     fig.savefig(os.path.join(FIGURES, "cec2017_convergence.png"),
                 bbox_inches="tight")

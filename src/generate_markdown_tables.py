@@ -18,7 +18,7 @@ import pandas as pd
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "results")
 
-ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA"]
+ALGOS = ["CA", "CA-static", "GWO", "PSO", "GA", "WOA", "L-SHADE", "CMA-ES"]
 
 # camelCase dict keys (engineering_problems.py) are fine for code but
 # render as unreadable, unbreakable strings in a narrow PDF table column
@@ -108,7 +108,18 @@ def main():
     wtl_table(os.path.join(RESULTS, "engineering_wilcoxon.csv"), "problem",
              "table_engineering_wtl.md")
 
-    print("Wrote 6 markdown tables to results/")
+    cec22 = pd.read_csv(os.path.join(RESULTS, "cec2022_stats.csv"))
+    cec22_funcs = sorted(cec22["func"].unique(),
+                         key=lambda l: (int(l.split("-D")[1]),
+                                        int(l[1:l.index("-D")])))
+    stats_table(os.path.join(RESULTS, "cec2022_stats.csv"), "func",
+               cec22_funcs, "table_cec2022_stats.md")
+    rank_table(os.path.join(RESULTS, "cec2022_mean_ranks.csv"),
+              "table_cec2022_ranks.md")
+    wtl_table(os.path.join(RESULTS, "cec2022_wilcoxon.csv"), "func",
+             "table_cec2022_wtl.md")
+
+    print("Wrote 9 markdown tables to results/")
 
 
 if __name__ == "__main__":

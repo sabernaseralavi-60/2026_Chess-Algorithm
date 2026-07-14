@@ -1,0 +1,74 @@
+
+== Post-hoc integrity audit: EXCLUDED 6 function(s) with best error < -1 (below the library's claimed f_global -- an opfunu defect, not a CA artifact) ==
+  F7-D20: min best error = -177.8
+  F8-D20: min best error = -301.4
+  F10-D10: min best error = -3450
+  F10-D20: min best error = -4588
+  F11-D10: min best error = -838.8
+  F12-D10: min best error = -41.02
+
+== F3 near-flatness rule ==
+  F3-D10: EXCLUDED (worst-mean algorithm PSO, median final error 0 < 1)
+  F3-D20: EXCLUDED (worst-mean algorithm PSO, median final error 0.06573 < 1)
+
+CEC-2022: 16 (function, dim) cells x 8 algorithms x 30 runs (D10=64, D20=64)
+
+== cec2022: mean Friedman ranks (chi2=81.69, p=6.23e-15) ==
+algo
+L-SHADE      1.8750
+CMA-ES       2.0625
+CA           3.6250
+CA-static    3.7500
+GA           4.7500
+PSO          5.6250
+GWO          6.4375
+WOA          7.8750
+
+== cec2022: CA win/tie/loss (Wilcoxon rank-sum, alpha=0.05) ==
+  vs CA-static:  1 win / 13 tie /  2 loss
+  vs GWO      : 12 win /  4 tie /  0 loss
+  vs PSO      : 12 win /  2 tie /  2 loss
+  vs GA       : 10 win /  4 tie /  2 loss
+  vs WOA      : 16 win /  0 tie /  0 loss
+  vs L-SHADE  :  1 win /  4 tie / 11 loss
+  vs CMA-ES   :  2 win /  2 tie / 12 loss
+
+== cec2022_D10: mean Friedman ranks (chi2=39.33, p=1.69e-06) ==
+algo
+L-SHADE      1.750
+CMA-ES       2.500
+CA-static    3.500
+CA           3.625
+GA           5.125
+PSO          5.125
+GWO          6.500
+WOA          7.875
+
+== cec2022_D10: CA win/tie/loss (Wilcoxon rank-sum, alpha=0.05) ==
+  vs CA-static:  0 win /  7 tie /  1 loss
+  vs GWO      :  7 win /  1 tie /  0 loss
+  vs PSO      :  6 win /  0 tie /  2 loss
+  vs GA       :  6 win /  1 tie /  1 loss
+  vs WOA      :  8 win /  0 tie /  0 loss
+  vs L-SHADE  :  0 win /  3 tie /  5 loss
+  vs CMA-ES   :  1 win /  2 tie /  5 loss
+
+== cec2022_D20: mean Friedman ranks (chi2=44.12, p=2.02e-07) ==
+algo
+CMA-ES       1.625
+L-SHADE      2.000
+CA           3.625
+CA-static    4.000
+GA           4.375
+PSO          6.125
+GWO          6.375
+WOA          7.875
+
+== cec2022_D20: CA win/tie/loss (Wilcoxon rank-sum, alpha=0.05) ==
+  vs CA-static:  1 win /  6 tie /  1 loss
+  vs GWO      :  5 win /  3 tie /  0 loss
+  vs PSO      :  6 win /  2 tie /  0 loss
+  vs GA       :  4 win /  3 tie /  1 loss
+  vs WOA      :  8 win /  0 tie /  0 loss
+  vs L-SHADE  :  1 win /  1 tie /  6 loss
+  vs CMA-ES   :  1 win /  0 tie /  7 loss
