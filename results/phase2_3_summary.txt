@@ -1,0 +1,43 @@
+
+== Post-hoc integrity audit: all functions clean (no algorithm went below f_global) ==
+CEC-2017: 29 functions x 8 algorithms x 30 runs
+
+== cec2017: mean Friedman ranks (chi2=150.08, p=3.9e-29) ==
+algo
+L-SHADE      1.758621
+CMA-ES       2.275862
+CA           3.620690
+CA-static    3.896552
+GA           4.137931
+PSO          6.034483
+GWO          6.413793
+WOA          7.862069
+
+== cec2017: CA win/tie/loss (Wilcoxon rank-sum, alpha=0.05) ==
+  vs CA-static:  5 win / 23 tie /  1 loss
+  vs GWO   : 27 win /  1 tie /  1 loss
+  vs PSO   : 22 win /  6 tie /  1 loss
+  vs GA    : 10 win /  9 tie / 10 loss
+  vs WOA   : 29 win /  0 tie /  0 loss
+  vs L-SHADE:  1 win /  2 tie / 26 loss
+  vs CMA-ES:  6 win /  3 tie / 20 loss
+
+== engineering: mean Friedman ranks (chi2=33.87, p=1.82e-05) ==
+algo
+L-SHADE      1.571429
+CMA-ES       2.142857
+CA           3.714286
+CA-static    4.142857
+GWO          5.000000
+PSO          5.714286
+GA           6.142857
+WOA          7.571429
+
+== engineering: CA win/tie/loss (Wilcoxon rank-sum, alpha=0.05) ==
+  vs CA-static:  1 win /  6 tie /  0 loss
+  vs GWO   :  3 win /  4 tie /  0 loss
+  vs PSO   :  4 win /  2 tie /  1 loss
+  vs GA    :  6 win /  1 tie /  0 loss
+  vs WOA   :  7 win /  0 tie /  0 loss
+  vs L-SHADE:  0 win /  0 tie /  7 loss
+  vs CMA-ES:  0 win /  1 tie /  6 loss

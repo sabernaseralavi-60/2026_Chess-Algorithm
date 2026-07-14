@@ -1,8 +1,10 @@
 | Algorithm | Mean Friedman rank |
 |---|---:|
-| **CA** | **2.000** |
-| GA | 2.167 |
-| CA-static | 2.208 |
-| PSO | 4.375 |
-| GWO | 4.417 |
-| WOA | 5.833 |
+| L-SHADE | 1.759 |
+| CMA-ES | 2.276 |
+| **CA** | **3.621** |
+| CA-static | 3.897 |
+| GA | 4.138 |
+| PSO | 6.034 |
+| GWO | 6.414 |
+| WOA | 7.862 |

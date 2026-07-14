@@ -546,7 +546,10 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
                        reheat_len=10, knight_leap="uniform",
                        opp_init=True, leap_end=0.5,
                        intf_open=0.30, intf_mid=0.15, p_da_mid=0.0,
-                       p_da_late=0.15, track_state=False):
+                       p_da_late=0.15, track_state=False,
+                       enable_pinning=True, enable_enpassant=True,
+                       enable_windmill=True, enable_threefold=True,
+                       p_council_scale=1.0):
     """
     Adaptive Chess Algorithm ("Grandmaster" variant). Builds on v2 but no
     longer plays every tactic in every position: a lightweight state
@@ -612,6 +615,15 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
     per `castling_period` + blockade extras (~25 per event) + pop extra
     evaluations once at initialization. Total overhead vs. the pop*iters
     core budget is ~12-15% and is disclosed in the paper.
+
+    Ablation switches (all default to the published behavior above):
+    `enable_pinning`, `enable_enpassant`, `enable_windmill`,
+    `enable_threefold` (booleans) and `p_council_scale` (multiplies
+    p_council; 0 disables the royal council probe). Castling, sacrifice,
+    fork, blockade, interference, discovered attack, and opposition init
+    are each already disableable via their existing parameters
+    (castling_period, theta0, p_fork, stall_break, intf_open/intf_mid,
+    p_da_mid/p_da_late, opp_init) -- see src/ablation_study.py.
     """
     L = ub - lb
     Lspan = np.max(L) if np.ndim(L) else L
@@ -693,6 +705,7 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
             leap_mult = leap_end
             p_council, p_da, p_intf = 0.7, p_da_late, 0.0
             pawn_gain = 0.45
+        p_council *= p_council_scale
 
         # sacrifice budget (robust, v2) + speculative reheat
         spread = max(F[-1] - F[0], 1e-12)
@@ -775,11 +788,12 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
                     + pawn_gain * rng.random(dim) * (better - X[i])
 
         # ---- PINNING (phase-gated) ----
-        for i in range(1, pop):
-            if rng.random() < p_pin_eff:
-                n_pin = rng.integers(1, max(2, int(pin_max * dim)))
-                pins = rng.choice(dim, size=n_pin, replace=False)
-                Xn[i, pins] = king_x[pins]
+        if enable_pinning:
+            for i in range(1, pop):
+                if rng.random() < p_pin_eff:
+                    n_pin = rng.integers(1, max(2, int(pin_max * dim)))
+                    pins = rng.choice(dim, size=n_pin, replace=False)
+                    Xn[i, pins] = king_x[pins]
 
         Xn = _clip(Xn, lb, ub)
         Fn = fun(Xn)
@@ -796,49 +810,50 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
         acc_e = 0.8 * acc_e + 0.2 * float(np.mean(accept))
 
         # ---- EN PASSANT + COUNCIL / DISCOVERED-ATTACK / CHECK probes ----
-        king_pre = king_x.copy()
-        mask = rng.random((3, dim)) < np.maximum(0.2, 2.0 / dim)
-        trials = king_x + sigma * rng.standard_normal((3, dim)) * mask
-        r_tac = rng.random()
-        if r_tac < p_council:
-            court = 0.5 * (X[idx_q[0]] + X[idx_r[0]]) if len(idx_r) \
-                else X[idx_q[0]]
-            trials[1] = king_x + 1.5 * rng.random() * (king_x - court)
-        elif r_tac < p_council + p_da:
-            # discovered attack: the battery fires THROUGH the King's
-            # square; the King relocates only if the discovered square
-            # is better (elitist, so it can never collapse diversity)
-            e = rng.integers(1, min(4, pop))
-            u = 1.2 + rng.random()
-            trials[1] = X[e] + u * (king_x - X[e])
-        if rng.random() < min(1.0, 4.0 / dim):
-            j_chk = rng.integers(dim)
-            trials[2] = king_x
-            trials[2, j_chk] = king_x[j_chk] + sigma * rng.standard_normal()
-        trials = _clip(trials, lb, ub)
-        Ft = fun(trials)
-        if Ft.min() < king_f:
-            king_x, king_f = trials[Ft.argmin()].copy(), Ft.min()
-            sigma = min(sigma * 1.3, Lspan)
-            fails = 0
-            eps_e = 0.8 * eps_e + 0.2
-            # ---- WINDMILL (endgame): repeat the winning displacement ----
-            if phase == "endgame":
-                delta = king_x - king_pre
-                for _ in range(3):
-                    cand = _clip(king_x + delta, lb, ub)
-                    fc = fun(cand[None, :])[0]
-                    if fc < king_f:
-                        king_x, king_f = cand, fc
-                    else:
-                        break
-        else:
-            sigma = max(sigma * 0.92, 1e-280)
-            fails += 1
-            eps_e = 0.8 * eps_e
-            if fails >= 50:
-                sigma = 0.05 * L * max(a, 0.05)
+        if enable_enpassant:
+            king_pre = king_x.copy()
+            mask = rng.random((3, dim)) < np.maximum(0.2, 2.0 / dim)
+            trials = king_x + sigma * rng.standard_normal((3, dim)) * mask
+            r_tac = rng.random()
+            if r_tac < p_council:
+                court = 0.5 * (X[idx_q[0]] + X[idx_r[0]]) if len(idx_r) \
+                    else X[idx_q[0]]
+                trials[1] = king_x + 1.5 * rng.random() * (king_x - court)
+            elif r_tac < p_council + p_da:
+                # discovered attack: the battery fires THROUGH the King's
+                # square; the King relocates only if the discovered square
+                # is better (elitist, so it can never collapse diversity)
+                e = rng.integers(1, min(4, pop))
+                u = 1.2 + rng.random()
+                trials[1] = X[e] + u * (king_x - X[e])
+            if rng.random() < min(1.0, 4.0 / dim):
+                j_chk = rng.integers(dim)
+                trials[2] = king_x
+                trials[2, j_chk] = king_x[j_chk] + sigma * rng.standard_normal()
+            trials = _clip(trials, lb, ub)
+            Ft = fun(trials)
+            if Ft.min() < king_f:
+                king_x, king_f = trials[Ft.argmin()].copy(), Ft.min()
+                sigma = min(sigma * 1.3, Lspan)
                 fails = 0
+                eps_e = 0.8 * eps_e + 0.2
+                # ---- WINDMILL (endgame): repeat the winning displacement ----
+                if enable_windmill and phase == "endgame":
+                    delta = king_x - king_pre
+                    for _ in range(3):
+                        cand = _clip(king_x + delta, lb, ub)
+                        fc = fun(cand[None, :])[0]
+                        if fc < king_f:
+                            king_x, king_f = cand, fc
+                        else:
+                            break
+            else:
+                sigma = max(sigma * 0.92, 1e-280)
+                fails += 1
+                eps_e = 0.8 * eps_e
+                if fails >= 50:
+                    sigma = 0.05 * L * max(a, 0.05)
+                    fails = 0
 
         # ---- CASTLING ----
         if (t + 1) % castling_period == 0 and len(idx_r) > 0:
@@ -852,11 +867,12 @@ def chess_algorithm_v3(fun, lb, ub, dim, pop, iters, rng,
                 king_x, king_f = cand, fc
 
         # ---- THREEFOLD REPETITION ----
-        dup = np.max(np.abs(X[1:] - king_x), axis=1) < 1e-12 * Lspan
-        if dup.any():
-            n_dup = int(dup.sum())
-            X[1:][dup] = lb + L * rng.random((n_dup, dim))
-            F[1:][dup] = fun(X[1:][dup])
+        if enable_threefold:
+            dup = np.max(np.abs(X[1:] - king_x), axis=1) < 1e-12 * Lspan
+            if dup.any():
+                n_dup = int(dup.sum())
+                X[1:][dup] = lb + L * rng.random((n_dup, dim))
+                F[1:][dup] = fun(X[1:][dup])
 
         # ---- update King; FIFTY-MOVE RULE stagnation count ----
         # (shuffling pieces without changing the evaluation is not

@@ -1,0 +1,9 @@
+algo,mean_rank
+CMA-ES,1.625
+L-SHADE,2.0
+CA,3.625
+CA-static,4.0
+GA,4.375
+PSO,6.125
+GWO,6.375
+WOA,7.875
