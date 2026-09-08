@@ -41,6 +41,13 @@ format:
         \definecolor{chessdark}{HTML}{7a5230}
         \usepackage{microtype}
         \usepackage{booktabs}
+        \usepackage{etoolbox}
+        % the transposed comparison tables put one column per test
+        % function, so they are wide; a smaller face inside table
+        % environments keeps them on the A4 text block without
+        % resizebox rescaling
+        \AtBeginEnvironment{longtable}{\scriptsize}
+        \AtBeginEnvironment{tabular}{\scriptsize}
 ---
 
 ::: {.content-visible when-format="html"}
@@ -74,6 +81,10 @@ $$ {#eq-problem}
 
 The trouble is what $f$ looks like in practice. Signal timing, network design, transit scheduling, detector placement — in each of these the objective is non-convex, often non-differentiable, riddled with local optima, and sometimes expensive to evaluate [@ceylan2004traffic; @osorio2013simulation]. Exact methods rarely scale to instances of realistic size. This is why metaheuristics have retained their prominence for three decades: they trade the guarantee of optimality for robustness, generality, and a computationally tractable budget.
 
+@fig-motivation states the argument of this section in one picture: the structural properties of these objectives on the left, the two features of a conventional homogeneous population that answer them only partially in the middle, and the two design decisions with which the algorithm proposed here responds on the right. The remainder of the introduction develops each column in turn.
+
+![Motivation and conceptual architecture. The objectives that arise in transportation and engineering design are non-convex, multimodal and frequently expensive to evaluate (left). A homogeneous population answers them with a single update rule applied to every agent, and schedules its exploration–exploitation transition on elapsed time alone (centre). The Chess Algorithm answers the first property with heterogeneous roles assigned by rank and the second with a controller that reads the observed state of the population each iteration (right). The sketched landscape is generated analytically and carries no experimental data.](figures/concept_motivation.png){#fig-motivation fig-align="center" width="100%"}
+
 ## A brief map of the metaheuristic landscape
 
 The field grew from two roots. Evolutionary computation gave us the Genetic Algorithm [@holland1975adaptation; @goldberg1989genetic] and Evolution Strategies [@beyer2002es]. Trajectory methods gave us Simulated Annealing [@kirkpatrick1983sa], whose central idea — accept a worse solution now and then, so you can escape a local minimum — turned out to be one of the most durable in the field. Swarm intelligence arrived in the 1990s with Particle Swarm Optimization [@kennedy1995pso], Ant Colony Optimization [@dorigo1996aco], Differential Evolution [@storn1997de], and later the Artificial Bee Colony [@karaboga2007abc]. More recently, Mirjalili and colleagues built a productive line of algorithms by abstracting the social and hunting behavior of animals into compact operators: the Grey Wolf Optimizer [@mirjalili2014gwo], the Ant Lion Optimizer [@mirjalili2015alo], the Dragonfly Algorithm [@mirjalili2016dragonfly], the Whale Optimization Algorithm [@mirjalili2016whale], the Sine Cosine Algorithm [@mirjalili2016sca], and the Salp Swarm Algorithm [@mirjalili2017salp], among others.
@@ -90,7 +101,11 @@ Chess offers precisely the two properties identified as absent above. Its pieces
 
 The game also comes with a mature strategic vocabulary, refined over centuries of analysis. Development says: mobilize your forces early, consolidate later. A sacrifice gives up material now for a positional advantage later. Pinning immobilizes a piece against something more valuable behind it. Castling is a safeguarded structural rearrangement; en passant, an opportunistic capture available only under narrow conditions; the threefold-repetition rule declares a draw when the position keeps repeating. Each of these has a natural algorithmic reading — exploration schedules, acceptance of deteriorating moves, variable fixation, elite restructuring, adaptive local search, and diversity preservation, respectively.
 
-The Chess Algorithm (CA) proposed here formalizes that mapping. To preempt a common misunderstanding: CA does not play chess and does not search a game tree. It borrows the strategic grammar of the game exclusively, and its per-iteration computational cost is comparable to that of GA or PSO.
+The Chess Algorithm (CA) proposed here formalizes that mapping. @fig-abstraction states it precisely: each piece becomes one movement geometry around the incumbent solution, and the figure names, for each, the search behaviour it produces and whether that behaviour contributes primarily to exploration or to exploitation. The right-hand column of that figure is deliberately not a claim of novelty — @sec-operator-families maps every one of these operators onto an established family with its canonical reference.
+
+![The chess abstraction, stated as a mapping onto search operators. Each piece contributes one movement geometry around the incumbent King, sketched from the equation given in the third column; the last column records whether the role contributes primarily to exploration or to exploitation. No operator here is new in kind: @tbl-operator-families names the established family and canonical reference of each, and the metaphor's contribution is the composition, not any individual operator.](figures/concept_abstraction.png){#fig-abstraction fig-align="center" width="94%"}
+
+To preempt a common misunderstanding: CA does not play chess and does not search a game tree. It borrows the strategic grammar of the game exclusively, and its per-iteration computational cost is comparable to that of GA or PSO.
 
 ## Contributions and scope
 
@@ -125,6 +140,12 @@ CA maintains a population of $N$ candidate solutions $\mathbf{X}_i \in \Omega \s
 : Mapping between chess concepts and CA mechanisms. {#tbl-mapping}
 
 One point deserves emphasis: CA borrows the strategic grammar of chess as an inductive bias, not the game itself. An iteration costs $\mathcal{O}(ND + N \log N)$ arithmetic operations (the movement updates plus the sort that drives role assignment) and $N + 3$ function evaluations — $N$ piece moves plus three en-passant probes — with one extra castling probe every $c$ iterations. That is the same order as GA, PSO, or GWO. The exact evaluation accounting used in the experiments is spelled out in @sec-benchmarks.
+
+## Architecture overview
+
+Before the components are defined one by one, @fig-architecture shows how they are assembled into a single iteration. Three strands run in parallel. The population is ranked, moved by role-specific operators, evaluated, and filtered by an acceptance rule; the King runs its own local search through en passant, castling, and the tactical probes; and the adaptive controller of @sec-adaptive reads four statistics of the population and conditions the rates at which the tactical operators fire. Solid edges carry candidate solutions, dashed edges carry control signals. Each box names the equation or section in which it is specified, so the figure doubles as a map of the rest of this section.
+
+![One iteration of CA. Ranking assigns roles, roles move under their own geometry, the King runs its own local search, and the adaptive controller reads the divergence, initiative, local-search success and stagnation of the population and conditions which tactical operators fire and at what rate. Solid arrows carry the population and the incumbent; dashed arrows are control signals. The complete step is given as pseudocode in @sec-ca.](figures/ca_architecture.png){#fig-architecture fig-align="center" width="100%"}
 
 ## Initialization
 
@@ -168,7 +189,9 @@ with $t$ the current iteration and $T$ the total budget — the convention popul
 
 ## Piece movement operators
 
-Write $\mathbf{L} = \mathbf{u} - \mathbf{l}$ for the box width and let $\mathbf{r}, \mathbf{r}' \sim \mathcal{U}(0,1)^D$ be independent random vectors. The five mobile roles then move as follows.
+Write $\mathbf{L} = \mathbf{u} - \mathbf{l}$ for the box width and let $\mathbf{r}, \mathbf{r}' \sim \mathcal{U}(0,1)^D$ be independent random vectors. The five mobile roles then move as follows; @fig-roles shows what each of the five equations below does geometrically, and makes the division of labour between them visible before the algebra is read.
+
+![Heterogeneous role-based search. (a) Ranking partitions the population each iteration in the fixed proportions of @tbl-params, the Pawns taking the remainder. (b)–(f) The geometry of each role operator in a two-dimensional section: blue is the incumbent King, grey the moving agent, teal a better-ranked peer, and orange the candidates the operator produces. The candidate clouds are not drawn by hand — they are 45 draws from the equation named in each panel title, evaluated with a fixed seed. The Rook moves one coordinate and the Bishop two of equal magnitude, so both produce axis-structured candidates; the Queen sweeps in every direction at a radius tied to its distance from the King; the Knight combines a drift toward a better-ranked peer with an asymmetric jump; the Pawn takes small steps toward both attractors, which is why its cloud is the tightest.](figures/ca_roles.png){#fig-roles fig-align="center" width="100%"}
 
 **Queen (omnidirectional sweep).** The queen circles the King at a radius tied to her current distance from him:
 
@@ -316,11 +339,7 @@ Input: objective f, bounds [l, u], dimension D,
 17 return King
 ```
 
-## Flowchart
-
-@fig-flowchart summarizes the core loop common to every iteration; the phase-dependent tactic selection and the blockade response of @sec-adaptive sit inside its "apply role moves" and "update King" boxes respectively, and are given in full in the pseudocode above.
-
-![Flowchart of the Chess Algorithm.](figures/ca_flowchart.png){#fig-flowchart fig-align="center" width="88%"}
+The correspondence between this pseudocode and @fig-architecture is one to one: lines 5–6 are the controller strand, lines 7–11 the population strand, and lines 12–16 the King's local search.
 
 ## Properties and design rationale
 
@@ -342,7 +361,11 @@ An asymptotic statement of this kind provides no information about behavior with
 
 ## Adaptive tactical control {#sec-adaptive}
 
-The mechanisms above give CA its movement vocabulary; what remains is to say how CA decides, moment to moment, which of them to lean on. A grandmaster does not run the same combination of tactics in a wide-open middlegame as in a locked pawn structure or a simplified endgame — which tactic is right depends on the position, not on a move counter. CA answers this with a lightweight state machine that reads four cheap statistics of the population each iteration and switches the active tactical repertoire accordingly, described below. For controlled comparison, every experiment in this paper is also run under **CA-static**: the identical operator set with this state machine disabled, so that role-appropriate tactics fire at fixed, non-adaptive rates instead. CA-static is not a separate algorithm; it is an ablation configuration, used throughout @sec-cec2017 and @sec-engineering to isolate exactly what the adaptive layer contributes.
+The mechanisms above give CA its movement vocabulary; what remains is to say how CA decides, moment to moment, which of them to lean on. A grandmaster does not run the same combination of tactics in a wide-open middlegame as in a locked pawn structure or a simplified endgame — which tactic is right depends on the position, not on a move counter. CA answers this with a lightweight state machine that reads four cheap statistics of the population each iteration and switches the active tactical repertoire accordingly, described below and summarized in @fig-statemachine.
+
+![The adaptive tactical controller. Four smoothed statistics — divergence $\tilde d$ (@eq-divergence), initiative $\alpha$ (@eq-acceptance), en-passant success rate $\varepsilon$ (@eq-epsilon), and the fifty-move stagnation counter $s$ (@eq-fifty-move) — are read once per iteration. Divergence and the elapsed fraction of the budget select one of four phases under the thresholds of @eq-phase, and each phase activates the operator rates reproduced in the lower panel from @tbl-phase-schedule. Two overlays act independently of the phase: the zugzwang rule of @eq-zugzwang and the blockade response of @sec-blockade. All printed values are those of @tbl-phase-schedule; the shading is proportional to the printed rate and carries no additional information.](figures/ca_statemachine.png){#fig-statemachine fig-align="center" width="100%"}
+
+For controlled comparison, every experiment in this paper is also run under **CA-static**: the identical operator set with this state machine disabled, so that role-appropriate tactics fire at fixed, non-adaptive rates instead. CA-static is not a separate algorithm; it is an ablation configuration, used throughout @sec-cec2017 and @sec-engineering to isolate exactly what the adaptive layer contributes.
 
 ### Reading the position
 
@@ -418,6 +441,10 @@ $$ {#eq-zugzwang}
 the development coefficient is halved for that one iteration, $a(t)\leftarrow a(t)/2$ — a *triangulation* move: change nothing structurally, spend a tempo, and let the next reading of the position be more informative before committing to a new phase.
 
 ### New tactical operators
+
+The five operators introduced below are what the phases of @tbl-phase-schedule switch between. @fig-tactics shows where each of them places a candidate relative to the incumbent and the elite, which is the property that distinguishes them from one another and from the role moves of @fig-roles: the en-passant trial is isotropic around the King at an adaptively scaled radius, the fork inherits a difference vector between two better-ranked peers, the council reflects away from the elite centroid, the interference recombines two elite members along the segment joining them, and the discovered attack extrapolates through the incumbent.
+
+![Geometry of the five tactical operators, each in a two-dimensional section, with points produced by the equation named in the panel title. (a) En passant: three masked Gaussian trials at the adaptive radius $\boldsymbol{\sigma}$, which is multiplied by $1.3$ after a successful capture and by $0.92$ after a failure. (b) Knight's fork: a drift toward the King plus the difference vector of two better-ranked peers. (c) Royal council: the King reflected away from the midpoint of the best Queen and best Rook. (d) Novotny interference: convex recombination of two members of the fitter half, which makes it rotation-invariant. (e) Discovered attack: extrapolation through the incumbent along an elite–King line, restricted to a single elitist probe.](figures/ca_tactics.png){#fig-tactics fig-align="center" width="100%"}
 
 **Novotny interference (Bishops).** Named for the classical motif in which a piece is sacrificed on a square that blocks two enemy lines of defense at once, a Bishop is occasionally interposed on the segment between two distant, higher-ranked pieces rather than moving diagonally around the King:
 
@@ -533,17 +560,17 @@ Statistics follow @derrac2011nonparametric: one-way ANOVA to establish that the 
 
 ## Descriptive results
 
-@tbl-stats reports the mean, standard deviation, best, and worst final errors for every algorithm–function pair.
+@tbl-stats reports the mean and standard deviation of the final objective value for every algorithm–function pair, with the algorithms as rows and the test functions as columns. The best and worst individual runs, which do not fit that orientation, are reported for every cell in @tbl-app-classical.
 
-{{< include results/table_stats.md >}}
+{{< include results/table_t_classical.md >}}
 
-: Mean, standard deviation, best, and worst final objective values over 30 runs (best mean per function in bold). {#tbl-stats tbl-colwidths="[18,12,18,18,17,17]"}
+: Final objective value over 30 runs on the six classical benchmarks ($D=30$), mean $\pm$ standard deviation. Best mean per function in bold. Best and worst runs are in @tbl-app-classical. {#tbl-stats tbl-colwidths="[13,15,14,14,14,15,15]"}
 
 ## Convergence behavior
 
 @fig-convergence shows the median best-so-far curves, from which three patterns are apparent. On F1, F4, and F6, CA continues to improve throughout the run — the en-passant success rule continues to identify improvements deep into the later iterations, whereas GA and PSO stagnate hundreds of iterations earlier. On the ill-conditioned Rosenbrock valley (F2), convergence for every population method slows substantially, with CA and GA tracking each other closely throughout. CA and CA-static track each other almost exactly on every function, visually confirming the near-total absence of a significant difference between them on this suite. GWO exhibits its well-documented strength on this classical suite, converging fastest and to the lowest values throughout. The distributions of final values underlying these curves are shown in @fig-boxplots.
 
-![Median convergence curves (30 runs, semi-log scale).](figures/convergence_all.png){#fig-convergence fig-align="center" width="100%"}
+![Convergence on the six classical benchmarks: median best-so-far objective over the 30 runs (semi-log scale).](figures/convergence_all.png){#fig-convergence fig-align="center" width="100%"}
 
 ![Distribution of final objective values over 30 runs.](figures/boxplots_all.png){#fig-boxplots fig-align="center" width="100%"}
 
@@ -551,15 +578,15 @@ Statistics follow @derrac2011nonparametric: one-way ANOVA to establish that the 
 
 One-way ANOVA confirms that the algorithm factor is highly significant on every function (@tbl-anova):
 
-{{< include results/table_anova.md >}}
+{{< include results/table_t_classical_anova.md >}}
 
 : One-way ANOVA over the six algorithms, per function. {#tbl-anova}
 
 The pairwise Wilcoxon tests give the sharper picture (@tbl-wilcoxon):
 
-{{< include results/table_wilcoxon.md >}}
+{{< include results/table_t_classical_wilcoxon.md >}}
 
-: Wilcoxon rank-sum tests, CA versus each competitor ($\alpha = 0.05$). {#tbl-wilcoxon}
+: Wilcoxon rank-sum tests, CA versus each competitor, $p$-value per function ($\alpha = 0.05$). $(+)$: CA significantly better; $(-)$: CA significantly worse; $(=)$: not significant. {#tbl-wilcoxon tbl-colwidths="[16,14,14,14,14,14,14]"}
 
 ## Discussion
 
@@ -599,25 +626,43 @@ The six labels were consequently restored using the independent implementation, 
 
 ## Results
 
-@tbl-cec2017-ranks reports the mean Friedman rank of each algorithm across all 29 validated functions, and @tbl-cec2017-wtl the win/tie/loss record of CA against each competitor under a two-sided Wilcoxon rank-sum test at $\alpha=0.05$. The full per-function statistics are in @tbl-cec2017-stats; @fig-cec2017 shows median convergence on six representative functions spanning unimodal, multimodal, hybrid, and composition landscapes.
+@tbl-cec2017-summary gives the standing of the whole roster in one place: the mean Friedman rank of each algorithm across the 29 validated functions, its rank position, the number of functions on which it holds the best mean, and its win/tie/loss record against CA under a two-sided Wilcoxon rank-sum test at $\alpha=0.05$.
 
-{{< include results/table_cec2017_ranks.md >}}
+{{< include results/table_t_cec2017_summary.md >}}
 
-: Mean Friedman rank across all 29 validated CEC-2017 functions (lower is better; $\chi^2=150.08$, $p=3.9\times10^{-29}$). {#tbl-cec2017-ranks}
+: CEC-2017 standing over the 29 validated functions (Friedman $\chi^2=150.08$, $p=3.9\times10^{-29}$; lower rank is better). The last column reads as CA's wins / ties / losses against the algorithm in that row, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-cec2017-summary}
 
-{{< include results/table_cec2017_wtl.md >}}
+The per-function evidence behind that summary is reported one table per official category of the suite, with the algorithms as rows and the functions as columns: @tbl-cec2017-unimodal (unimodal), @tbl-cec2017-multimodal (simple multimodal), @tbl-cec2017-hybrid-a and @tbl-cec2017-hybrid-b (the ten hybrid functions), and @tbl-cec2017-composition-a and @tbl-cec2017-composition-b (the ten composition functions). The two larger categories are split in half so that no table exceeds six function columns; best and worst runs for every cell are in @tbl-app-cec2017.
 
-: CA win/tie/loss against each competitor, CEC-2017, 29 functions, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-cec2017-wtl}
+{{< include results/table_t_cec2017_unimodal.md >}}
 
-![Median convergence on six representative CEC-2017 functions (30 runs, semi-log scale).](figures/cec2017_convergence.png){#fig-cec2017 fig-align="center" width="100%"}
+: CEC-2017, unimodal functions: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-unimodal tbl-colwidths="[20,40,40]"}
 
-::: {.content-visible when-format="html"}
-The full 29-function table (mean and standard deviation per algorithm, best mean per function in bold) is long; it is included below and is also available as a standalone file at [`results/table_cec2017_stats.md`](results/table_cec2017_stats.md).
-:::
+{{< include results/table_t_cec2017_multimodal.md >}}
 
-{{< include results/table_cec2017_stats.md >}}
+: CEC-2017, simple multimodal functions: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-multimodal tbl-colwidths="[13,12.4,12.4,12.4,12.4,12.4,12.4,12.6]"}
 
-: Mean, standard deviation, best, and worst final error $f-f^{*}$ over 30 runs, all 29 validated CEC-2017 functions (best mean per function in bold). {#tbl-cec2017-stats}
+{{< include results/table_t_cec2017_hybrid_a.md >}}
+
+: CEC-2017, hybrid functions F10-F14: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-hybrid-a tbl-colwidths="[16,16.8,16.8,16.8,16.8,16.8]"}
+
+{{< include results/table_t_cec2017_hybrid_b.md >}}
+
+: CEC-2017, hybrid functions F15-F19: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-hybrid-b tbl-colwidths="[16,16.8,16.8,16.8,16.8,16.8]"}
+
+{{< include results/table_t_cec2017_composition_a.md >}}
+
+: CEC-2017, composition functions F20-F24: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-composition-a tbl-colwidths="[16,16.8,16.8,16.8,16.8,16.8]"}
+
+{{< include results/table_t_cec2017_composition_b.md >}}
+
+: CEC-2017, composition functions F25-F29: final error $f-f^{*}$ over 30 runs, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2017-composition-b tbl-colwidths="[16,16.8,16.8,16.8,16.8,16.8]"}
+
+@fig-cec2017 shows median convergence on six representative functions and @fig-cec2017-dist the distribution of final errors on the same six. The six were chosen to span the four official categories — one unimodal, one multimodal, two hybrid, two composition — and are not selected for CA's advantage: they include F4 and F22, on which both competition-grade methods beat CA.
+
+![Median convergence on six representative CEC-2017 functions, one or more per official category (30 runs, semi-log scale). The same six functions are used in @fig-cec2017-dist.](figures/cec2017_convergence.png){#fig-cec2017 fig-align="center" width="100%"}
+
+![Distribution of the final error over 30 runs on the six representative CEC-2017 functions of @fig-cec2017 (log scale; box = interquartile range, whiskers = 1.5 IQR, points = outliers). The figure answers a question the means alone cannot: whether a ranking is carried by typical runs or by outliers. The picture is not uniform. On F1 the distributions of CA, CA-static, L-SHADE and CMA-ES overlap almost entirely — CA holds the lowest mean of the roster on that function, and its comparisons against both competition-grade methods are statistical ties ($p=0.21$ against each) — whereas on F4, F10 and F13 the two sit roughly an order of magnitude below CA, with tighter distributions, and beat it significantly. On the two composition functions the absolute gaps are small but consistent across runs, and CA loses to both methods there as well.](figures/cec2017_boxplots.png){#fig-cec2017-dist fig-align="center" width="100%"}
 
 ## Discussion
 
@@ -641,29 +686,27 @@ The same two-stage audit as @sec-opfunu-audit was applied to `opfunu`'s CEC-2022
 
 ## Results
 
-@tbl-cec2022-ranks reports the mean Friedman rank of each algorithm across the sixteen validated cells, and @tbl-cec2022-wtl the win/tie/loss record of CA against each competitor under the two-sided Wilcoxon rank-sum test at $\alpha=0.05$. @fig-cec2022 shows median convergence on three representative functions per dimensionality; the full per-cell statistics are in @tbl-cec2022-stats.
+@tbl-cec2022-summary gives the standing of the roster across the sixteen validated cells, in the same layout as @tbl-cec2017-summary. The per-cell results follow in @tbl-cec2022-d10 and @tbl-cec2022-d20, one table per official dimensionality; best and worst runs are in @tbl-app-cec2022, and the excluded cells remain listed with their reasons in @tbl-cec2022-audit.
 
-{{< include results/table_cec2022_ranks.md >}}
+{{< include results/table_t_cec2022_summary.md >}}
 
-: Mean Friedman rank across the 16 validated CEC-2022 (function, dimension) cells (lower is better; $\chi^2=81.69$, $p=6.2\times10^{-15}$). {#tbl-cec2022-ranks}
+: CEC-2022 standing over the 16 validated (function, dimension) cells (Friedman $\chi^2=81.69$, $p=6.2\times10^{-15}$; lower rank is better). The last column reads as CA's wins / ties / losses against the algorithm in that row. {#tbl-cec2022-summary}
 
-{{< include results/table_cec2022_wtl.md >}}
+{{< include results/table_t_cec2022_D10.md >}}
 
-: CA win/tie/loss against each competitor, CEC-2022, 16 validated cells, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-cec2022-wtl}
+: CEC-2022 at $D=10$: final error $f-f^{*}$ over 30 runs on the eight validated functions, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2022-d10 tbl-colwidths="[12,11,11,11,11,11,11,11,11]"}
 
-![Median convergence on six representative CEC-2022 cells — F1 (Zakharov), F6 (Hybrid 1), and F9 (Composition 1) at each of the two official dimensionalities (30 runs, semi-log scale).](figures/cec2022_convergence.png){#fig-cec2022 fig-align="center" width="100%"}
+{{< include results/table_t_cec2022_D20.md >}}
 
-::: {.content-visible when-format="html"}
-The full sixteen-cell table (mean and standard deviation per algorithm, best mean per cell in bold) is included below and is also available as a standalone file at [`results/table_cec2022_stats.md`](results/table_cec2022_stats.md).
-:::
+: CEC-2022 at $D=20$: final error $f-f^{*}$ over 30 runs on the eight validated functions, mean $\pm$ standard deviation, best mean per function in bold. {#tbl-cec2022-d20 tbl-colwidths="[12,11,11,11,11,11,11,11,11]"}
 
-{{< include results/table_cec2022_stats.md >}}
+@fig-cec2022 shows median convergence on three representative cells per dimensionality.
 
-: Mean, standard deviation, best, and worst final error $f-f^{*}$ over 30 runs, all 16 validated CEC-2022 cells (best mean per cell in bold). {#tbl-cec2022-stats}
+![Median convergence on six representative CEC-2022 cells — F1 (Zakharov), F6 (Hybrid 1), and F9 (Composition 1) at each of the two official dimensionalities (30 runs, semi-log scale). The three functions span the suite's basic, hybrid, and composition classes, and they are not selected for CA's advantage: on F9 CA holds the best mean at $D=10$ and ties both competition-grade methods there, but loses to both significantly at $D=20$.](figures/cec2022_convergence.png){#fig-cec2022 fig-align="center" width="100%"}
 
 ## Discussion
 
-The ordering at the top of @tbl-cec2022-ranks is unambiguous and consistent with @sec-cec2017: the two competition-grade methods lead (L-SHADE $1.88$, CMA-ES $2.06$), followed by CA ($3.63$) and CA-static ($3.75$) as the best-ranked of the remaining six, then GA ($4.75$), PSO ($5.63$), GWO ($6.44$), and WOA ($7.88$). The pattern is stable across dimensionalities: restricting the Friedman analysis to the eight $D=10$ cells gives L-SHADE first and CMA-ES second ($\chi^2=39.3$, $p=1.7\times10^{-6}$), and restricting it to the eight $D=20$ cells gives CMA-ES first and L-SHADE second ($\chi^2=44.1$, $p=2.0\times10^{-7}$), with CA third at $D=20$ and effectively tied with CA-static for third at $D=10$.
+The ordering at the top of @tbl-cec2022-summary is unambiguous and consistent with @sec-cec2017: the two competition-grade methods lead (L-SHADE $1.88$, CMA-ES $2.06$), followed by CA ($3.63$) and CA-static ($3.75$) as the best-ranked of the remaining six, then GA ($4.75$), PSO ($5.63$), GWO ($6.44$), and WOA ($7.88$). The pattern is stable across dimensionalities: restricting the Friedman analysis to the eight $D=10$ cells gives L-SHADE first and CMA-ES second ($\chi^2=39.3$, $p=1.7\times10^{-6}$), and restricting it to the eight $D=20$ cells gives CMA-ES first and L-SHADE second ($\chi^2=44.1$, $p=2.0\times10^{-7}$), with CA third at $D=20$ and effectively tied with CA-static for third at $D=10$.
 
 The pairwise records make both directions of the comparison explicit. Against the classical roster, CA wins 12 of 16 cells against GWO and PSO, 10 against GA, and all 16 against WOA, with at most 2 losses to any of them. Against L-SHADE it loses 11 of 16 with a single win (F11, the second composition function, at $D=20$); against CMA-ES it loses 12 with two wins (F7 at $D=10$ and F6 at $D=20$, both hybrid functions). These losses are reported as the central fact of this section, not as a footnote to it: under this budget, the specialized adaptive machinery of L-SHADE and CMA-ES is decisively stronger on shifted-rotated synthetic landscapes than CA's chess-derived composition, at both dimensionalities. The NFL-based reading of such reversals, developed for the GA trade-off in @sec-cec2017, applies here in the same form and is not repeated; what is specific to this suite is that the GA trade-off itself does not reappear — CA beats GA 10-4-2 on CEC-2022, against a losing record on CEC-2017 — indicating that GA's long-range crossover advantage is specific to the 30-dimensional CEC-2017 hybrid and composition geometry rather than a general property. @sec-ablation offers a mechanism-level account of *why* the two specialized methods lead, which is more informative than the observation itself.
 
@@ -675,21 +718,17 @@ Alongside standardized synthetic suites, it is standard practice in this literat
 
 ## Results
 
-@tbl-engineering-ranks reports the mean Friedman rank of each algorithm across the seven problems, @tbl-engineering-wtl the win/tie/loss record of CA against each competitor, and @tbl-engineering-stats the full per-problem statistics; @fig-engineering shows median convergence on all seven.
+@tbl-engineering-summary gives the standing of the roster across the seven problems and @tbl-engineering-stats the per-problem results, with the algorithms as rows and the design problems as columns; best and worst runs are in @tbl-app-engineering. @fig-engineering shows median convergence on all seven.
 
-{{< include results/table_engineering_ranks.md >}}
+{{< include results/table_t_engineering_summary.md >}}
 
-: Mean Friedman rank across the 7 engineering design problems (lower is better; $\chi^2=33.87$, $p=1.8\times10^{-5}$). {#tbl-engineering-ranks}
+: Engineering design standing over the 7 problems (Friedman $\chi^2=33.87$, $p=1.8\times10^{-5}$; lower rank is better). The last column reads as CA's wins / ties / losses against the algorithm in that row. {#tbl-engineering-summary}
 
-{{< include results/table_engineering_wtl.md >}}
+{{< include results/table_t_engineering.md >}}
 
-: CA win/tie/loss against each competitor, engineering design problems, Wilcoxon rank-sum at $\alpha=0.05$. {#tbl-engineering-wtl}
+: Objective value over 30 runs on the seven constrained engineering design problems, mean $\pm$ standard deviation, best mean per problem in bold. Best and worst runs are in @tbl-app-engineering. {#tbl-engineering-stats tbl-colwidths="[13,12.4,12.4,12.4,12.4,12.4,12.4,12.6]"}
 
 ![Median convergence on the seven engineering design problems (30 runs, semi-log scale).](figures/engineering_convergence.png){#fig-engineering fig-align="center" width="100%"}
-
-{{< include results/table_engineering_stats.md >}}
-
-: Mean, standard deviation, best, and worst objective over 30 runs, all 7 engineering design problems (best mean per problem in bold). {#tbl-engineering-stats tbl-colwidths="[16,16,15,14,14,15]"}
 
 ## Discussion
 
@@ -703,11 +742,13 @@ The preceding sections treat CA as a unit. This section takes it apart: which of
 
 ## Granular ablation {#sec-ablation}
 
-Each of the twelve strategic mechanisms of @sec-ca is disabled one at a time — all other mechanisms held at their published defaults — and each single-mechanism-off variant is compared against full CA over 30 runs on six problems spanning the paper's sections: CEC-2017 F1 (Bent Cigar), F4 (Rastrigin), F13 (Hybrid 4), and F22 (Composition 3) at $D=30$ under the suite protocol and seeds of @sec-cec2017, the welded-beam problem under the protocol of @sec-engineering, and the berth allocation problem P2 under the protocol of @sec-mealpy. @tbl-ablation reports, for each mechanism, the ratio of the ablated variant's mean final error to full CA's, averaged over the six problems, together with the number of problems on which the difference is statistically significant; the per-problem breakdown is committed in the repository (`results/table_ablation_detail.md`).
+Each of the twelve strategic mechanisms of @sec-ca is disabled one at a time — all other mechanisms held at their published defaults — and each single-mechanism-off variant is compared against full CA over 30 runs on six problems spanning the paper's sections: CEC-2017 F1 (Bent Cigar), F4 (Rastrigin), F13 (Hybrid 4), and F22 (Composition 3) at $D=30$ under the suite protocol and seeds of @sec-cec2017, the welded-beam problem under the protocol of @sec-engineering, and the berth allocation problem P2 under the protocol of @sec-mealpy. @tbl-ablation reports, for each mechanism, the ratio of the ablated variant's mean final error to full CA's, averaged over the six problems, together with the number of problems on which the difference is statistically significant; the per-problem breakdown is @tbl-app-ablation, also committed in the repository (`results/table_ablation_detail.md`).
 
 {{< include results/table_ablation.md >}}
 
 : Granular ablation: each mechanism disabled in isolation, mean final-error ratio relative to full CA averaged over six problems (ratios above 1 indicate the mechanism helps), with Wilcoxon significance counts at $\alpha=0.05$. {#tbl-ablation}
+
+![Mechanism contribution. (a) For each of CA's twelve mechanisms, the bar is the ratio of the mean final error with that mechanism disabled to the mean final error of full CA, averaged over the six problems of this section (log scale; above 1 means the ablated variant is worse, i.e. the mechanism helps), with the number of problems on which the Wilcoxon difference is significant at $\alpha=0.05$ in parentheses. (b) The same ratio per problem for the two load-bearing mechanisms. The metric is a ratio of means under one-at-a-time removal, not an importance score: it is defined only relative to full CA, and mechanisms with overlapping function can each appear individually dispensable even when they are not collectively so.](figures/ablation_contribution.png){#fig-ablation fig-align="center" width="100%"}
 
 Two mechanisms carry most of the load, and they are not of equal kind. Disabling the en-passant capture — the success-rule local refinement of @sec-enpassant — degrades the mean error by a factor of roughly $600$ averaged over the six problems, dominated by a factor of $3.6\times10^{3}$ on Bent Cigar, and the degradation is significant on five of six problems including the welded beam ($+1.9\%$, $p=0.003$); CA's terminal accuracy on smooth or locally smooth landscapes rests essentially on this one mechanism. Disabling the knight's fork — the differential move of @eq-fork — costs a factor of $47$ on the same average (a factor of $274$ on Bent Cigar), significant on the same five problems; the fork is CA's principal rotation-invariant recombination device. The remaining ten mechanisms measure small individually: threefold repetition averages a ratio of $1.21$ (significant on three problems, with mixed sign — protective on Bent Cigar and Rastrigin, marginally harmful on the composition function), the royal council is significantly *helpful* only on the welded beam ($+2.9\%$ when removed) while being significantly *harmful* to retain on two synthetic functions — consistent with its design purpose, the constraint-valley geometry of @eq-council, and suggesting a constraint-conditional gating as a refinement — and the other eight (sacrifice, pinning, windmill, opposition initialization, discovered attack, blockade, interference, castling) sit between $0.99$ and $1.07$ with at most one significant problem each. One methodological caveat applies to the small ratios: a one-at-a-time ablation measures each mechanism's marginal contribution in the presence of all others, and mechanisms with overlapping function can each appear individually dispensable even when they are not collectively so; the CA-static configuration, which disables the adaptive gating of all mechanisms simultaneously and is carried through every experiment in this paper, provides the complementary joint measurement.
 
@@ -715,23 +756,33 @@ The identity of the two load-bearing mechanisms is the most consequential findin
 
 ## Parameter sensitivity {#sec-sensitivity}
 
-A one-at-a-time sensitivity analysis perturbs each parameter group of @tbl-params around the published default configuration — role fractions bracketed low and high, $\theta_0 \in \{0.05, 0.2\}$, castling period $c \in \{5, 20\}$, blockade threshold $\in \{15, 40\}$, and pinning cap $\in \{0.15, 0.50\}$ — on the same six problems and run protocol as @sec-ablation. @tbl-sensitivity reports each variant's mean-error ratio relative to the default configuration. The phase thresholds $\delta_{\text{open}}, \delta_{\text{end}}$ of @eq-phase are not re-swept here; the four-combination check reported in @sec-adaptive stands.
+A one-at-a-time sensitivity analysis perturbs each parameter group of @tbl-params around the published default configuration — role fractions bracketed low and high, $\theta_0 \in \{0.05, 0.2\}$, castling period $c \in \{5, 20\}$, blockade threshold $\in \{15, 40\}$, and pinning cap $\in \{0.15, 0.50\}$ — on the same six problems and run protocol as @sec-ablation. @tbl-sensitivity reports each variant's mean-error ratio relative to the default configuration, and @fig-sensitivity shows the same quantity with its per-problem range. The phase thresholds $\delta_{\text{open}}, \delta_{\text{end}}$ of @eq-phase are not re-swept here; the four-combination check reported in @sec-adaptive stands.
 
 {{< include results/table_sensitivity.md >}}
 
 : One-at-a-time parameter sensitivity: mean final-error ratio of each perturbed configuration relative to the default, averaged over six problems, with the number of problems deviating by more than twenty percent and the number of statistically significant deviations. {#tbl-sensitivity}
 
+![Parameter sensitivity profile. Each row perturbs one parameter group of @tbl-params around the published default with all others held fixed; the marker is the mean final-error ratio of the perturbed configuration to the default over the six problems of @sec-ablation, and the line spans the per-problem range. Filled markers mark variants with at least one statistically significant per-problem deviation — only the two role-fraction rows qualify. Because the design is one-at-a-time, these are local sensitivities around a single configuration and not a global sensitivity analysis: interactions between parameters are not measured.](figures/sensitivity_profile.png){#fig-sensitivity fig-align="center" width="90%"}
+
 The pattern is sharp: of sixty tested (variant, problem) cells, all eight statistically significant deviations belong to the role-fraction rows, and no other parameter produces a significant change on any problem, with mean ratios within ten percent of unity throughout. CA is therefore robust to its sacrifice constant, castling period, blockade threshold, and pinning cap at the granularity tested — a practitioner does not need to tune them — while the division of the population among piece roles is the one structural choice that matters. Its direction is informative in both senses. Shrinking the elite roles (more pawns) is harmful, catastrophically so on Bent Cigar (a factor of $73$), where the elite ranks supply nearly all useful moves. Enlarging them is *beneficial* on several problems (mean ratio $0.89$, significantly better on three): the published default of @tbl-params, fixed a priori and used unchanged for every result in this paper, is demonstrably not optimal everywhere, and this headroom is reported rather than exploited — no result elsewhere in the paper uses the improved fractions.
 
 ## Computational cost {#sec-cost}
 
-Cost is measured, not estimated: an exact counting wrapper intercepts every objective call, and wall-clock time is taken with a monotonic timer over ten runs per cell on an otherwise idle machine, for all eight algorithms on six problems spanning the paper's sections (CEC-2017 F1, F13, F22 at $D=30$; CEC-2022 F8 at $D=20$; welded beam; signal timing P1 at its own $T=300$ protocol). @tbl-timing reports mean seconds per run, mean evaluations consumed, the ratio of evaluations to the $N \times T$ core budget, and time relative to GA on the same problem.
+Cost is measured, not estimated: an exact counting wrapper intercepts every objective call, and wall-clock time is taken with a monotonic timer over ten runs per cell on an otherwise idle machine, for all eight algorithms on six problems spanning the paper's sections (CEC-2017 F1, F13, F22 at $D=30$; CEC-2022 F8 at $D=20$; welded beam; signal timing P1 at its own $T=300$ protocol). @tbl-timing reports mean seconds per run for each algorithm on each of the six problems, together with the mean ratio of evaluations consumed to the $N \times T$ core budget and the mean time relative to GA; @tbl-app-timing gives the per-problem evaluation counts behind those two averages.
 
-{{< include results/table_timing.md >}}
+{{< include results/table_t_timing.md >}}
 
-: Measured wall-clock time and exact evaluation counts, all eight algorithms on six problems, ten runs per cell on an idle machine. "Evals / core budget" is the ratio of consumed evaluations to $N \times T$. {#tbl-timing}
+: Measured wall-clock time (mean seconds per run, ten runs per cell on an idle machine) with the algorithms as rows and the six timed problems as columns, followed by two summary columns averaged over those problems. "Evals / core budget" is the ratio of consumed evaluations to the shared core budget $N \times T$, averaged over the six problems and counted exactly by a wrapper intercepting every objective call; it exceeds $1$ slightly for GWO, PSO, GA and WOA because the initial population evaluation lies outside $N \times T$, and falls below $1$ for CMA-ES only because it stops early on the welded beam ($60\%$ of the budget), consuming exactly the core budget on the other five problems. The per-problem evaluation counts behind these ratios are in @tbl-app-timing. {#tbl-timing}
 
 Three facts summarize the table. First, CA's evaluation overhead — the en-passant probes, castling probes, windmill extensions, and blockade responses documented throughout @sec-ca — measures $12.4\%$ over the core budget on average (range $11.4$–$13.4\%$ across the six problems; CA-static $11.6\%$), which replaces the "ten to fifteen percent" estimate quoted in earlier sections with its measured value. Second, the budget asymmetry runs *against* the two strongest competitors: L-SHADE is capped at $3.3\%$ over core and CMA-ES consumes at most exactly the core budget — on the welded beam it stops at sixty percent of it, having reached the numerical-precision floor of its stagnation tests — so the results of @sec-cec2017 through @sec-engineering cannot be attributed to evaluation-budget advantages held by the winners; the only algorithm holding a budget advantage in those tables is CA itself, and it is disclosed and measured. Third, wall-clock overhead depends on what dominates: on the cheapest objective CA costs about $2.2\times$ GA's time per run, reflecting the control layer's per-iteration bookkeeping, while on the most expensive objective tested (CEC-2022 F8 at $D=20$, where a single evaluation costs roughly forty times more than on Bent Cigar) all eight algorithms fall within about fifteen percent of one another — for expensive objectives, which are the practically interesting case, the choice among these algorithms is a choice about evaluations, not about control-layer arithmetic.
+
+## Where CA stands {#sec-standing}
+
+The three suites of @sec-cec2017, @sec-cec2022, and @sec-engineering were run under one roster and one protocol, so their Friedman ranks can be read side by side. @fig-standing does that, and it is the compact form of this paper's central empirical claim. The ordering is the same on all three suites and admits no qualification: L-SHADE and CMA-ES lead, CA follows as the best of the remaining six, and CA-static sits just behind it. CA's position is therefore neither a sweep nor a failure, and the ablation of @sec-ablation explains why it is where it is — CA's two load-bearing operators are fixed-rate members of exactly the two families those two methods specialize in and adapt fully.
+
+![Where CA stands. Mean Friedman rank of each algorithm (lower is better) on the three suites evaluated under the identical eight-algorithm roster and protocol. The ordering is stable across all three: the two competition-grade methods lead, CA is the best-ranked of the remaining six on every suite, and CA-static follows it. The classical six-function suite of @sec-benchmarks is not shown, because it was run under a different roster — it includes SA and excludes WOA, L-SHADE, and CMA-ES.](figures/standing_ranks.png){#fig-standing fig-align="center" width="94%"}
+
+Two qualifications belong with the figure. It compares mean ranks, which compress the per-function records of @tbl-cec2017-summary, @tbl-cec2022-summary, and @tbl-engineering-summary — CA's ten losses to GA on CEC-2017 are invisible in a mean rank that GA nonetheless trails. And a rank is relative to the roster: adding or removing an algorithm changes every rank in the figure, which is why the pairwise Wilcoxon records are reported alongside it throughout the paper rather than in place of it.
 
 # Transportation Application: Arterial Signal Coordination {#sec-transport}
 
@@ -751,7 +802,9 @@ $$
 \mathbf{z} = \big(C,\ g_1, \dots, g_8,\ o_2, \dots, o_8\big) \in \mathbb{R}^{16},
 $$ {#eq-decision}
 
-with a common cycle length $C \in [60, 140]$ s, arterial green splits $g_i \in [0.30, 0.75]$, and offsets $o_i$ expressed as fractions of the cycle (intersection 1 serves as reference). The objective is total network delay in veh·h/h, built from three ingredients.
+with a common cycle length $C \in [60, 140]$ s, arterial green splits $g_i \in [0.30, 0.75]$, and offsets $o_i$ expressed as fractions of the cycle (intersection 1 serves as reference). @fig-signal-model shows which physical object each of the sixteen variables controls, and why the coupling between the offsets, the spacings, and the progression speed is what makes this landscape multimodal. The objective is total network delay in veh·h/h, built from three ingredients.
+
+![From the arterial to the decision vector. (a) The eight intersections share one cycle length $C$; each contributes an arterial green split $g_i$, and each except the reference intersection an offset $o_i$ — the sixteen variables of @eq-decision. (b) The offsets displace each local green window in time; a platoon that leaves one window inside the green arrives at the next either inside its window (green, no delay) or after it (orange, and it waits). Because the arterial carries platoons in both directions, offsets that perfect one direction damage the other, which is the origin of the multimodality. Panel (b) is a schematic at an illustrative cycle and split; the optimized plan is @fig-plan.](figures/signal_model.png){#fig-signal-model fig-align="center" width="100%"}
 
 The first is uniform delay per approach, Webster's first term [@webster1958traffic]:
 
@@ -775,21 +828,23 @@ CA, CA-static (@sec-adaptive), GA, PSO, and GWO — the three strongest baseline
 
 ## Results
 
-@tbl-traffic summarizes the final delays; @fig-traffic-conv and @fig-traffic-box show the convergence behavior and the spread across runs.
+@tbl-traffic summarizes the final delays together with the pairwise tests; @fig-traffic-conv and @fig-traffic-box show the convergence behavior and the spread across runs.
 
-{{< include results/table_traffic.md >}}
+{{< include results/table_t_traffic.md >}}
 
-: Final total delay over 30 runs (best mean in bold). {#tbl-traffic}
-
-{{< include results/table_traffic_wilcoxon.md >}}
-
-: Wilcoxon rank-sum tests on the signal timing problem, CA versus each competitor. {#tbl-traffic-wilcoxon}
+: Final total delay over 30 runs on the arterial signal timing problem, with the two-sided Wilcoxon rank-sum test of each algorithm against CA ($\alpha=0.05$). Best mean in bold. Because this section evaluates a single problem instance, the algorithms are already the rows and the statistics are the columns. {#tbl-traffic}
 
 ![Median convergence on the arterial signal timing problem.](figures/traffic_convergence.png){#fig-traffic-conv fig-align="center" width="90%"}
 
 ![Distribution of final delays over 30 runs.](figures/traffic_boxplot.png){#fig-traffic-box fig-align="center" width="80%"}
 
 Four key observations emerge from the results, highlighting both the strengths and limitations of the algorithms. First, all five configurations land within about one percent of each other in mean delay ($169.5$–$171.2$ veh·h/h), yet at this scale the differences are mostly resolvable: CA is significantly better than GA ($p=0.002$) and GWO ($p=0.015$), statistically tied with its own ablation CA-static ($p=0.062$), and — the one result unfavorable to CA — significantly *worse* than PSO ($p=0.031$), whose mean delay of $169.491$ is the lowest in the table. Second, on the best-solution metric the ranking is reversed: CA and CA-static both reach $166.5254$ veh·h/h, the lowest value found by any method, fractionally ahead of GA's and PSO's best runs ($166.526$) and clearly ahead of GWO's ($166.739$) — so CA's operators are fully capable of locating the same high-quality coordination plan as the strongest baselines, even where its mean is lower than PSO's. Third, and the most notable pattern: the classical-suite ranking of @sec-benchmarks, where GWO dominates, does not carry over here at all — GWO is the worst mean performer of the five. This constitutes a clear within-paper illustration of the No-Free-Lunch theorem [@wolpert1997nfl]. Fourth, the interpretation is kept modest and specific rather than characterized as an unqualified sweep: CA is competitive with, and on several pairwise comparisons better than, the state of the practice on this problem, but PSO's mean advantage is reported as such rather than minimized.
+
+::: {.content-visible when-format="pdf"}
+```{=latex}
+\clearpage
+```
+:::
 
 ## The best coordination plan found
 
@@ -799,7 +854,7 @@ The best plan discovered (by CA) selects the minimum cycle, $C = 60$ s — a sen
 
 : Best signal timing plan found (CA). {#tbl-plan}
 
-![Time–space representation of the best plan found by CA.](figures/traffic_best_plan.png){#fig-plan fig-align="center" width="100%"}
+![Time–space representation of the best plan found by CA.](figures/traffic_best_plan.png){#fig-plan fig-align="center" width="78%"}
 
 The offsets form a coherent progression pattern in which consecutive intersections alternate between favoring the eastbound and the westbound platoon — the compromise structure one expects on a heavily loaded two-way arterial.
 
@@ -839,7 +894,7 @@ Achieving that bound requires the ship-pair schedule to be simultaneously confli
 
 : CA versus six mealpy algorithms and the two competition-grade baselines on the continuous berth allocation problem (P2), objective in minutes. {#tbl-mealpy-berth}
 
-Against the `mealpy` group, CA's advantage increases substantially on this problem: its mean objective is roughly a sixth of WOA's or HHO's, and it is significantly better than every one of the six, ALO included ($p = 2.3\times10^{-4}$), which is otherwise its nearest rival in that group by a considerable margin. @fig-mealpy-convergence (right panel) illustrates the pattern — among the seven methods shown, CA and ALO are the only two that make sustained progress past iteration 50, while WOA, SCA, MFO, HHO, and DE largely plateau in the first fifty iterations. The two competition-grade baselines again lead: L-SHADE's mean of $6{,}269$ and CMA-ES's of $6{,}522$ are both significantly better than CA's $7{,}934$, this time by the widest relative margins observed on any problem in this paper outside the synthetic suites ($18$–$21\%$ in mean objective).
+@tbl-mealpy-berth reports the results. Against the `mealpy` group, CA's advantage increases substantially on this problem: its mean objective is roughly a sixth of WOA's or HHO's, and it is significantly better than every one of the six, ALO included ($p = 2.3\times10^{-4}$), which is otherwise its nearest rival in that group by a considerable margin. @fig-mealpy-convergence (right panel) illustrates the pattern — among the seven methods shown, CA and ALO are the only two that make sustained progress past iteration 50, while WOA, SCA, MFO, HHO, and DE largely plateau in the first fifty iterations. The two competition-grade baselines again lead: L-SHADE's mean of $6{,}269$ and CMA-ES's of $6{,}522$ are both significantly better than CA's $7{,}934$, this time by the widest relative margins observed on any problem in this paper outside the synthetic suites ($18$–$21\%$ in mean objective).
 
 ![Median convergence on the two transportation problems, CA versus six mealpy algorithms (30 runs). The berth-allocation panel marks the known global optimum.](figures/mealpy_convergence.png){#fig-mealpy-convergence fig-align="center" width="100%"}
 
@@ -851,7 +906,7 @@ The distance of even the best runs from $F^{*} = 4{,}860$ should be stated expli
 
 CA's best run sits $29\%$ above the true optimum — a substantial gap, which we explicitly acknowledge without obfuscation. Three aspects of the table warrant separate discussion. First, the smallest gaps belong to the competition-grade methods: L-SHADE reaches $8.7\%$ (with a numerically negligible residual overlap of $0.5$ min·m in its best plan) and CMA-ES $11.6\%$ on a fully feasible plan — the closest any general-purpose method in this study comes to the combinatorial optimum, and clear evidence that the instance rewards stronger adaptive machinery rather than being uniformly hard. Second, among the seven remaining methods CA's gap is the smallest by a considerable margin — $22$ to $266$ percentage points closer to $F^{*}$ than the six `mealpy` competitors, including a $22$-point margin over ALO, its nearest rival in that group. Third, the overlap column shows that CA's best plan is fully feasible — ships do not actually collide in the time–space diagram — which is not true of WOA, SCA, MFO, or HHO, whose reported objectives still include unresolved penalty mass from residual overlaps; ALO and DE also land on fully feasible plans, but at substantially larger gaps. @fig-berth-plan shows CA's best schedule; every ship occupies its own rectangle with no overlap, though several ships wait appreciably longer than their arrival time, which accounts for the remaining $29\%$ of the gap.
 
-![Time–space diagram of the best berth allocation plan found by CA. Dotted lines mark each ship's arrival time; the gap between the arrival line and the left edge of a ship's rectangle is its waiting time.](figures/berth_best_plan.png){#fig-berth-plan fig-align="center" width="85%"}
+![Time–space diagram of the best berth allocation plan found by CA. Each rectangle is one ship: its width is the required service time and its height the ship's length, so a feasible plan is one in which no two rectangles overlap. Dotted lines mark arrival times and the orange arrows the waiting time between arrival and mooring, which is what separates this plan from the optimum. The header states the plan's objective, the known global optimum $F^{*}=4{,}860$ min, the resulting optimality gap, and the residual overlap — zero, so the plan is feasible. The gap is therefore waiting time alone, not infeasibility.](figures/berth_best_plan.png){#fig-berth-plan fig-align="center" width="92%"}
 
 ## Scope of the empirical claims
 
@@ -883,39 +938,35 @@ The value of a new metaheuristic should be assessed not by its performance on an
 
 # Data and code availability {.unnumbered}
 
-All source code, experiment scripts, results, and manuscript sources are openly available at [github.com/sabernaseralavi-60/2026_Chess-Algorithm](https://github.com/sabernaseralavi-60/2026_Chess-Algorithm); the rendered article is served at [sabernaseralavi-60.github.io/2026_Chess-Algorithm](https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/), with the PDF at [`paper.pdf`](paper.pdf). A Persian translation (`paper-fa.qmd`) is included in the repository and can be rendered locally to Word with Quarto. Every figure and table in this paper is generated by committed scripts:
+All source code, experiment scripts, results, and manuscript sources are openly available at the project repository, [github.com/sabernaseralavi-60/2026_Chess-Algorithm](https://github.com/sabernaseralavi-60/2026_Chess-Algorithm), whose `README.md` documents every script and the order in which it must be run to reproduce each table and figure in this paper. Random seeds are fixed throughout, and every number reported here corresponds exactly to a committed output in the repository. The two data-integrity audits of @sec-opfunu-audit and @sec-cec2022 are reproducible rather than asserted: the raw statistics behind each exclusion are committed alongside the validated results, so a reader can re-run the same checks against a newer release of the underlying benchmark libraries rather than take our exclusion lists on faith.
 
-```bash
-python src/phase_threshold_check.py     # phase-transition threshold check (@sec-adaptive)
-python src/run_benchmarks.py            # six-function benchmark experiments (@sec-benchmarks)
-python src/traffic_case_study.py        # arterial signal timing case study (@sec-transport)
-python src/mealpy_comparison.py         # extended third-party comparison (@sec-mealpy)
-python src/cec2017_full_run.py --part i/4   # full CEC-2017 suite, i = 0..3 (@sec-cec2017)
-python src/cec2022_full_run.py --part i/4   # full CEC-2022 suite, i = 0..3 (@sec-cec2022)
-python src/sota_addon_run.py            # L-SHADE + CMA-ES on the existing suites
-python src/engineering_full_run.py      # 7 engineering design problems (@sec-engineering)
-python src/cec2017_restoration_audit.py # cross-library audit of excluded labels (@sec-opfunu-audit)
-python src/cec2017_restore_run.py       # 8-algorithm rerun of the restored labels
-python src/ablation_study.py            # granular per-mechanism ablation (@sec-ablation)
-python src/sensitivity_study.py         # OAT parameter sensitivity (@sec-sensitivity)
-python src/timing_study.py              # measured wall-clock + evaluation counts (@sec-cost)
-python src/phase2_3_analysis.py         # CEC-2017/engineering merge, audit, Friedman/Wilcoxon, figures
-python src/cec2022_analysis.py          # CEC-2022 merge, audit, ranks, figure
-python src/generate_markdown_tables.py  # this paper's result tables
-python src/generate_timing_table.py     # the measured-cost table (@sec-cost)
-python src/generate_latex_tables.py     # camera-ready LaTeX tables (results/latex_tables_final.tex)
-quarto render                           # build HTML + PDF + Persian docx
-```
+# Appendix A: Supplementary tables {#sec-appendix .unnumbered}
 
-In `src/algorithms.py`, CA is the function `chess_algorithm_v3` and its ablation CA-static is `chess_algorithm_v2`; the module also retains an earlier non-adaptive prototype (`chess_algorithm`) from the algorithm's development history, kept for archival reference but not used to produce any result in this paper. The single-mechanism ablation switches of @sec-ablation are keyword arguments of `chess_algorithm_v3` whose defaults reproduce the published behavior bit-for-bit (verified against the pre-change implementation on identical seeds before any ablation run). Random seeds are fixed in every script; the results in this paper correspond exactly to the committed outputs in `results/` and `figures/`. The data-integrity audits of @sec-opfunu-audit and @sec-cec2022 are likewise reproducible rather than asserted: `results/cec2017_opfunu_defect_evidence.csv` preserves the defective `opfunu` raw statistics for the six excluded CEC-2017 labels, and `results/cec2022_stats_raw_unaudited.csv` retains the full pre-audit CEC-2022 numbers, so a reader can re-run the same checks against a newer `opfunu` release rather than take our exclusion lists on faith. Readers who want the detailed per-function and per-problem tables in camera-ready LaTeX rather than the paper's own tables may use `results/latex_tables_final.tex` directly.
+The primary comparison tables of @sec-benchmarks through @sec-analysis report the mean and standard deviation of each algorithm–problem cell, in the orientation with algorithms as rows and test functions as columns. The best and worst individual runs, and the per-problem detail of the ablation and cost analyses, do not fit that orientation and are collected here rather than dropped. Every cell of a primary table has its counterpart in exactly one table below; the correspondence is checked numerically by `src/validate_presentation.py`, and both are generated from the same committed result files.
 
-# About the corresponding author {.unnumbered}
+{{< include results/table_stats.md >}}
 
-::: {layout="[22,78]"}
-![](assets/author_photo.jpg)
+: Classical suite, full statistics: mean, standard deviation, best, and worst final objective over 30 runs, per function and algorithm (best mean per function in bold). The mean and standard deviation columns are those of @tbl-stats. {#tbl-app-classical}
 
-**Seyed Saber Naseralavi** is an Assistant Professor in the Department of Civil Engineering at Shahid Bahonar University of Kerman, Iran. He received his B.Sc. in Civil Engineering from Shahid Bahonar University of Kerman (2004), his M.Sc. in Highway and Transportation Engineering from Iran University of Science and Technology (2006), and his Ph.D. in Highway and Transportation Engineering from Tarbiat Modares University (2011), graduating first in his doctoral cohort at the Faculty of Civil and Environmental Engineering. His research spans traffic safety modeling and surrogate safety measures, traffic flow theory and simulation, travel behavior, machine learning applications in transportation, and metaheuristic optimization for transportation network design. He has authored over 50 refereed journal articles and 80 conference papers, supervised numerous graduate theses, and reviews for several international journals. A provincial chess champion in his youth — first place in the under-12 and under-14 tournaments of Kerman province — he brings to this work a lifelong familiarity with the strategic structure of the game that inspired the algorithm.
-:::
+{{< include results/table_cec2017_stats.md >}}
+
+: CEC-2017, full statistics on all 29 validated functions: mean, standard deviation, best, and worst final error $f-f^{*}$ over 30 runs (best mean per function in bold). The mean and standard deviation columns are those of @tbl-cec2017-unimodal through @tbl-cec2017-composition-b. {#tbl-app-cec2017}
+
+{{< include results/table_cec2022_stats.md >}}
+
+: CEC-2022, full statistics on all 16 validated (function, dimension) cells: mean, standard deviation, best, and worst final error $f-f^{*}$ over 30 runs (best mean per cell in bold). {#tbl-app-cec2022}
+
+{{< include results/table_engineering_stats.md >}}
+
+: Engineering design, full statistics on all 7 problems: mean, standard deviation, best, and worst objective over 30 runs (best mean per problem in bold). {#tbl-app-engineering}
+
+{{< include results/table_ablation_detail.md >}}
+
+: Granular ablation, per problem: final-error ratio of each single-mechanism-off variant to full CA, with the Wilcoxon $p$-value and its significance at $\alpha=0.05$. The averages of these ratios are @tbl-ablation and @fig-ablation. {#tbl-app-ablation}
+
+{{< include results/table_timing.md >}}
+
+: Measured cost, per problem: mean wall-clock time, mean evaluations consumed, the ratio of evaluations to the core budget $N \times T$, and time relative to GA on the same problem, over ten runs per cell. The summary columns of @tbl-timing are the averages of these rows. {#tbl-app-timing}
 
 # References {.unnumbered}
 

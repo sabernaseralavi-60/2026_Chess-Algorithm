@@ -44,16 +44,12 @@ ALGORITHMS = {
     "SA": simulated_annealing, "GWO": grey_wolf,
 }
 ALG_ORDER = ["CA", "CA-static", "GA", "PSO", "SA", "GWO"]
-COLORS = {"CA": "#1a1a2e", "CA-static": "#5b6ee1", "GA": "#c0392b",
-          "PSO": "#2980b9", "SA": "#8e44ad", "GWO": "#27ae60"}
-STYLES = {"CA": "-", "CA-static": (0, (4, 1)), "GA": "--", "PSO": "-.",
-          "SA": ":", "GWO": (0, (3, 1, 1, 1))}
+# one identity palette for the whole paper (src/figstyle.py); before
+# this the classical-suite figures used a private palette, so the same
+# algorithm changed colour between sections of the manuscript
+from figstyle import COLORS, STYLES, use_style   # noqa: E402
 
-plt.rcParams.update({
-    "font.family": "serif", "font.size": 10,
-    "axes.spines.top": False, "axes.spines.right": False,
-    "figure.dpi": 300,
-})
+use_style()
 
 
 def run_all():
@@ -149,13 +145,16 @@ def make_figures(curves):
     fig, axes = plt.subplots(2, 3, figsize=(11, 6.2))
     for ax, (fname, (_, _, _, label)) in zip(axes.ravel(), BENCHMARKS.items()):
         for alg in ALG_ORDER:
-            m = curves[(fname, alg)].mean(axis=0)
+            # median over the 30 runs, matching every other convergence
+            # figure in the paper; a mean on a log axis is dominated by
+            # the single worst run
+            m = np.median(curves[(fname, alg)], axis=0)
             m = np.maximum(m, 1e-300)
             ax.semilogy(m, color=COLORS[alg], linestyle=STYLES[alg],
                         linewidth=1.4, label=alg)
         ax.set_title(label, fontsize=10)
         ax.set_xlabel("Iteration", fontsize=8)
-        ax.set_ylabel("Best fitness (log)", fontsize=8)
+        ax.set_ylabel("Median best-so-far objective", fontsize=8)
         ax.tick_params(labelsize=7)
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="lower center", ncol=5, frameon=False)
@@ -251,7 +250,12 @@ if __name__ == "__main__":
     make_tables(FINALS)
     make_figures(CURVES)
     make_flowchart()
-    np.savez_compressed(f"{OUT_RES}/raw_finals.npz",
-                        **{f"{f}__{a}": FINALS[(f, a)]
-                           for f in BENCHMARKS for a in ALG_ORDER})
+    # final values plus the median convergence curve of each cell, so
+    # the figures can be restyled later without re-running the suite
+    np.savez_compressed(
+        f"{OUT_RES}/raw_finals.npz",
+        **{f"{f}__{a}": FINALS[(f, a)]
+           for f in BENCHMARKS for a in ALG_ORDER},
+        **{f"{f}__{a}__med": np.median(CURVES[(f, a)], axis=0)
+           for f in BENCHMARKS for a in ALG_ORDER})
     print(f"\nTotal wall time: {time.time()-t0:.1f}s")

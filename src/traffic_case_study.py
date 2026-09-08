@@ -168,16 +168,11 @@ ALGORITHMS = {
     "GA": genetic_algorithm, "PSO": particle_swarm, "GWO": grey_wolf,
 }
 ALGS = ["CA", "CA-static", "GA", "PSO", "GWO"]
-COLORS = {"CA": "#1a1a2e", "CA-static": "#5b6ee1", "GA": "#c0392b",
-          "PSO": "#2980b9", "GWO": "#27ae60"}
-STYLES = {"CA": "-", "CA-static": (0, (4, 1)), "GA": "--", "PSO": "-.",
-          "GWO": (0, (3, 1, 1, 1))}
+# one identity palette for the whole paper (src/figstyle.py), so an
+# algorithm keeps its colour and line style across every figure
+from figstyle import COLORS, STYLES, use_style   # noqa: E402
 
-plt.rcParams.update({
-    "font.family": "serif", "font.size": 10,
-    "axes.spines.top": False, "axes.spines.right": False,
-    "figure.dpi": 300,
-})
+use_style()
 
 
 def run_experiment():
@@ -235,8 +230,11 @@ def make_outputs(curves, finals, bests):
 
     # ---- convergence figure ----
     fig, ax = plt.subplots(figsize=(6.4, 4.0))
+    # median over the 30 runs, as in every other convergence figure in
+    # the paper: on this objective a single poor run would otherwise
+    # drag the whole curve
     for alg in ALGS:
-        ax.plot(curves[alg].mean(axis=0), color=COLORS[alg],
+        ax.plot(np.median(curves[alg], axis=0), color=COLORS[alg],
                 linestyle=STYLES[alg], lw=1.5, label=alg)
     ax.set_xlabel("Iteration")
     ax.set_ylabel("Total network delay (veh·h/h)")
@@ -328,5 +326,9 @@ if __name__ == "__main__":
     os.makedirs("../figures", exist_ok=True)
     CURVES, FINALS, BESTS = run_experiment()
     make_outputs(CURVES, FINALS, BESTS)
-    np.savez_compressed("../results/raw_traffic.npz", **FINALS)
+    # archive the median curves alongside the final values, so the
+    # figures can be restyled later without re-running the experiment
+    np.savez_compressed(
+        "../results/raw_traffic.npz", **FINALS,
+        **{f"{a}__med": np.median(CURVES[a], axis=0) for a in ALGS})
     print("done")

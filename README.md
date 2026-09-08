@@ -74,6 +74,9 @@ Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO un
 │   ├── traffic_case_study.py       # Arterial signal timing → results/, figures/
 │   ├── mealpy_comparison.py        # CA vs mealpy (WOA/SCA/ALO/MFO/HHO/DE) on
 │   │                                #   signal timing + continuous berth allocation
+│   │                                #   (run via run_transportation_pipeline.py, not directly)
+│   ├── run_transportation_pipeline.py # mealpy_comparison.py -> sota_addon_run.py
+│   │                                #   --suite transport -> validates both ran
 │   ├── cec2017_full_run.py         # Full CEC-2017 suite (partitionable, --part i/4)
 │   ├── cec2022_full_run.py         # Full CEC-2022 suite, both dims (partitionable, --part i/4)
 │   ├── sota_addon_run.py           # Adds L-SHADE/CMA-ES to CEC-2017/engineering/transport
@@ -87,9 +90,16 @@ Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO un
 │   ├── phase2_3_analysis.py        # Merge partitions, data-integrity audit,
 │   │                                #   Friedman/Wilcoxon stats, convergence figures
 │   ├── cec2022_analysis.py         # CEC-2022 merge, audit, F3 flatness rule, ranks, figure
-│   ├── generate_markdown_tables.py # Quarto-includable result tables
+│   ├── generate_markdown_tables.py # Detailed function-major tables (paper Appendix A)
+│   ├── generate_transposed_tables.py # Primary tables: algorithms as rows, functions as
+│   │                                #   columns, mean +/- std, best mean in bold
 │   ├── generate_timing_table.py    # Measured-cost table
-│   └── generate_latex_tables.py    # Camera-ready LaTeX tables (results/latex_tables_final.tex)
+│   ├── generate_latex_tables.py    # Camera-ready LaTeX tables (results/latex_tables_final.tex)
+│   ├── figstyle.py                 # One identity palette and figure style for every figure
+│   ├── make_concept_figures.py     # Conceptual figures (introduction, signal-timing model)
+│   ├── make_method_figures.py      # Mechanism figures (architecture, roles, tactics, controller)
+│   ├── make_result_figures.py      # Ablation, sensitivity, cross-suite ranks, CEC-2017 boxplots
+│   └── validate_presentation.py    # Re-checks every rendered table cell against its source CSV
 ├── results/                        # Committed CSVs + Markdown tables (reproducible)
 ├── figures/                        # Committed publication figures (300 DPI)
 ├── assets/                         # Author photo
@@ -109,7 +119,9 @@ pip install git+https://github.com/tilleyd/cec2017-py.git
 
 python src/run_benchmarks.py               # six-function benchmark
 python src/traffic_case_study.py           # arterial signal-timing case study
-python src/mealpy_comparison.py            # extended third-party comparison
+python src/run_transportation_pipeline.py  # extended third-party comparison (Sec. 9);
+                                            #   see "Transportation pipeline" below --
+                                            #   do not call mealpy_comparison.py directly
 python src/cec2017_full_run.py --part 0/4  # full CEC-2017 suite (run parts 0..3,
 python src/cec2017_full_run.py --part 1/4  #   in parallel or in sequence)
 python src/cec2017_full_run.py --part 2/4
@@ -119,7 +131,9 @@ python src/cec2022_full_run.py --part 1/4
 python src/cec2022_full_run.py --part 2/4
 python src/cec2022_full_run.py --part 3/4
 python src/engineering_full_run.py         # 7 engineering design problems
-python src/sota_addon_run.py               # adds L-SHADE/CMA-ES to CEC-2017/engineering/transport
+python src/sota_addon_run.py --suite cec2017      # adds L-SHADE/CMA-ES to CEC-2017
+python src/sota_addon_run.py --suite engineering  #   and to engineering (transport is
+                                                   #   covered by the pipeline above)
 python src/cec2017_restoration_audit.py    # audits the excluded CEC-2017 labels
 python src/cec2017_restore_run.py          # 8-algorithm rerun of the restored labels
 python src/ablation_study.py               # 12-mechanism ablation
@@ -127,9 +141,33 @@ python src/sensitivity_study.py            # parameter sensitivity
 python src/timing_study.py                 # measured cost (run on an otherwise-idle machine)
 python src/phase2_3_analysis.py            # merge + audit + stats + figures (CEC-2017/engineering)
 python src/cec2022_analysis.py             # merge + audit + F3 rule + stats + figure (CEC-2022)
-python src/generate_markdown_tables.py     # paper-facing result tables
+python src/generate_markdown_tables.py     # detailed tables (paper Appendix A)
+python src/generate_transposed_tables.py   # primary tables (algorithms as rows)
 python src/generate_timing_table.py        # measured-cost table
 python src/generate_latex_tables.py        # camera-ready LaTeX tables
+python src/make_concept_figures.py         # conceptual figures
+python src/make_method_figures.py          # mechanism figures
+python src/make_result_figures.py          # analysis figures
+python src/validate_presentation.py        # numerical + cross-reference validation
+quarto render                              # build HTML + PDF
+```
+
+### Transportation pipeline
+
+Section 9's tables need **two** scripts to run, in order, because the second depends on a file
+the first writes:
+
+```bash
+python src/run_transportation_pipeline.py
+#   1. mealpy_comparison.py           -- CA + six third-party mealpy algorithms
+#   2. sota_addon_run.py --suite transport   -- adds L-SHADE and CMA-ES
+#   3. validates that every transportation table contains both, and fails loudly if not
+```
+
+Do not call `mealpy_comparison.py` on its own: it writes `table_mealpy_signal.md`,
+`table_mealpy_berth.md`, and `table_berth_gap.md` with seven algorithms, silently short of the
+nine the manuscript reports, until `sota_addon_run.py --suite transport` adds the other two. The
+pipeline script exists so that dependency can't be missed; `python src/run_transportation_pipeline.py --validate-only` re-checks it against whatever is already on disk without re-running the experiment.
 
 quarto render                              # builds _article/ (EN: HTML + PDF; FA: docx)
 ```

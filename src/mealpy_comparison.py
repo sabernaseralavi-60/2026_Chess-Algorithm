@@ -281,10 +281,37 @@ def berth_plan_figure(best_x_ca):
                 weight="bold", color="#1a1a2e")
         ax.plot([S_ARR[i], S_ARR[i]], [v[i], v[i] + S_LEN[i]],
                 color="#1a1a2e", lw=0.8, linestyle=":", alpha=0.6)
+        if u[i] - S_ARR[i] > 1.0:                 # visible waiting time
+            ax.annotate("", xy=(u[i], v[i] + S_LEN[i] / 2),
+                        xytext=(S_ARR[i], v[i] + S_LEN[i] / 2),
+                        arrowprops=dict(arrowstyle="<->", lw=0.7,
+                                        color="#b45309",
+                                        shrinkA=0, shrinkB=0))
     ax.set_xlim(0, HORIZON)
     ax.set_ylim(0, QUAY)
     ax.set_xlabel("Time (min)")
     ax.set_ylabel("Quay position (m)")
+
+    # what the reader needs in order to judge the plan: the known
+    # optimum, the objective of the plan drawn, and the gap between them
+    obj = float(berth_objective(z)[0])          # z is already decoded
+    ov = berth_overlap(z)
+    ax.set_title(
+        f"objective {obj:,.0f} min   |   known optimum "
+        f"{BERTH_OPT:,.0f} min   |   gap "
+        f"{100.0 * (obj - BERTH_OPT) / BERTH_OPT:.1f}%   |   residual "
+        f"overlap {ov:.1f} min$\\cdot$m (feasible)", fontsize=9)
+    handles = [
+        plt.Line2D([], [], color="#1a1a2e", ls=":", lw=0.9,
+                   label="arrival time of the ship"),
+        plt.Line2D([], [], color="#b45309", lw=0.9,
+                   label="waiting time (arrival $\\rightarrow$ mooring)"),
+        plt.Rectangle((0, 0), 1, 1, fc="#cbd5e1", ec="#1a1a2e", lw=0.8,
+                      label="service: width = service time, "
+                            "height = ship length"),
+    ]
+    ax.legend(handles=handles, loc="upper center", ncol=3,
+              bbox_to_anchor=(0.5, -0.14), frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig("../figures/berth_best_plan.png", bbox_inches="tight")
     plt.close(fig)
