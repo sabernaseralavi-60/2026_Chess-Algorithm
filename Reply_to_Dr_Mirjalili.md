@@ -27,9 +27,11 @@ Thank you for taking the time to read the draft and for such actionable feedback
 
 To be direct about scope: none of this touched the science. Every equation, protocol, seed, and result is exactly what it was when you read the draft; a validation script re-checks every number in every new table and figure against the underlying result files before I trust any of it myself, and the negative results — CA losing to L-SHADE and CMA-ES throughout, the record against GA, the loss to PSO on signal timing — are reported with the same honesty as before, now easier to see rather than harder.
 
-The updated manuscript is at the same repository:
+I have attached the updated PDF to this email for your convenience; the full source, data, and code are at the same repository as before:
 
 https://github.com/sabernaseralavi-60/2026_Chess-Algorithm
+
+One more thing, on a personal note, since I owe you the explanation directly rather than letting you notice it in passing: you'll see I now sign as Seyedsaber rather than Seyed Saber. I've decided to merge the two the way you write Seyedali — we share the same "Seyed" — and I'll admit the resemblance to your name was very much the point. It is a small gesture, but a sincere one, from someone whose work you have shaped more than you probably know.
 
 I would very much welcome any further comments — on this round of changes or on anything else in the paper — whenever your schedule allows.
 
