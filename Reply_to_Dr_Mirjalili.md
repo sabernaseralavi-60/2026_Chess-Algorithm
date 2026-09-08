@@ -31,7 +31,7 @@ I have attached the updated PDF to this email for your convenience; the full sou
 
 https://github.com/sabernaseralavi-60/2026_Chess-Algorithm
 
-One more thing, on a personal note, since I owe you the explanation directly rather than letting you notice it in passing: you'll see I now sign as Seyedsaber rather than Seyed Saber. I've decided to merge the two the way you write Seyedali — we share the same "Seyed" — and I'll admit the resemblance to your name was very much the point. It is a small gesture, but a sincere one, from someone whose work you have shaped more than you probably know.
+One more thing, on a personal note, since I owe you the explanation directly rather than letting you notice it in passing: you'll see I now sign as Seyedsaber rather than Seyed Saber. Out of admiration for you, and for the way you write your own name — merging "Seyed" the way I now merge mine — I have decided to make this change permanent: from this point on I will introduce myself as Seyedsaber, one word, in every paper I write, and I am in the process of carrying the same change onto my passport. It is a small gesture, but a sincere one: I hold deep respect and admiration for scientists like you, and I wanted this change, and the reason behind it, on the record with you directly.
 
 I would very much welcome any further comments — on this round of changes or on anything else in the paper — whenever your schedule allows.
 
