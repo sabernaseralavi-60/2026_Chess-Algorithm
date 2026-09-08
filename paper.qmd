@@ -1,7 +1,7 @@
 ---
 title: "The Chess Algorithm: A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering"
 author:
-  - name: Seyed Saber Naseralavi
+  - name: Seyedsaber Naseralavi
     corresponding: true
     email: saber_naseralavi@uk.ac.ir
     affiliations:
@@ -57,7 +57,7 @@ format:
 :::
 
 ::: {.content-visible when-format="pdf"}
-| ^1^ *Seyed Saber Naseralavi (corresponding author,* `saber_naseralavi@uk.ac.ir`*) — Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran.*
+| ^1^ *Seyedsaber Naseralavi (corresponding author,* `saber_naseralavi@uk.ac.ir`*) — Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran.*
 | ^2^ *Seyedali Mirjalili — Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia.*
 | *An HTML version of this article, together with all code and data, is available at* <https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>*.*
 :::

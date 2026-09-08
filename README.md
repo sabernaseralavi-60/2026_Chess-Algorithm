@@ -2,7 +2,7 @@
 
 **A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering**
 
-Seyed Saber Naseralavi (Shahid Bahonar University of Kerman) — corresponding author
+Seyedsaber Naseralavi (Shahid Bahonar University of Kerman) — corresponding author
 Seyedali Mirjalili (Torrens University Australia) — *invited co-author; participation pending confirmation*
 
 ## 📖 Where to read the paper
