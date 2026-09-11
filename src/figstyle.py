@@ -22,7 +22,7 @@ import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Polygon
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _PAPER = os.path.join(_ROOT, "paper.qmd")
@@ -137,14 +137,49 @@ def box(ax, x, y, w, h, text, fc=FILL, ec=INK, fontsize=8.0, lw=0.9,
         zorder=2, style="round"):
     """Rounded rectangle with centred text; returns the (x, y, w, h)."""
     pad = 0.0
+    bs = (f"{style},pad=0" if style == "square"
+          else f"{style},pad=0,rounding_size={rounding}")
     ax.add_patch(FancyBboxPatch(
-        (x + pad, y + pad), w - 2 * pad, h - 2 * pad,
-        boxstyle=f"{style},pad=0,rounding_size={rounding}",
+        (x + pad, y + pad), w - 2 * pad, h - 2 * pad, boxstyle=bs,
         facecolor=fc, edgecolor=ec, linewidth=lw, zorder=zorder))
     ax.text(x + w / 2 if ha == "center" else x + 0.012,
             y + h / 2, text, ha=ha, va="center", fontsize=fontsize,
             color=color, weight=weight, zorder=zorder + 1,
             linespacing=1.35)
+    return (x, y, w, h)
+
+
+def process(ax, x, y, w, h, text, fc=FILL, fontsize=7.6, lw=0.9):
+    """Flowchart process step: a plain rectangle (ISO 5807)."""
+    return box(ax, x, y, w, h, text, fc=fc, fontsize=fontsize, lw=lw,
+               rounding=0.0, style="square")
+
+
+def terminator(ax, x, y, w, h, text, fc=FILL3, fontsize=7.8, lw=1.0):
+    """Flowchart terminal: a stadium (start / stop)."""
+    return box(ax, x, y, w, h, text, fc=fc, fontsize=fontsize, lw=lw,
+               rounding=h / 2.0, style="round")
+
+
+def parallelogram(ax, x, y, w, h, text, fc=FILL2, fontsize=7.6, lw=0.9,
+                  skew=0.055):
+    """Flowchart input / output symbol."""
+    pts = [(x + skew, y), (x + w, y), (x + w - skew, y + h), (x, y + h)]
+    ax.add_patch(Polygon(pts, closed=True, facecolor=fc, edgecolor=INK,
+                         linewidth=lw, zorder=2))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
+            fontsize=fontsize, color=INK, zorder=3, linespacing=1.3)
+    return (x, y, w, h)
+
+
+def diamond(ax, x, y, w, h, text, fc=FILL2, fontsize=7.6, lw=0.9):
+    """Flowchart decision symbol."""
+    cx, cy = x + w / 2, y + h / 2
+    pts = [(cx, y + h), (x + w, cy), (cx, y), (x, cy)]
+    ax.add_patch(Polygon(pts, closed=True, facecolor=fc, edgecolor=INK,
+                         linewidth=lw, zorder=2))
+    ax.text(cx, cy, text, ha="center", va="center", fontsize=fontsize,
+            color=INK, zorder=3, linespacing=1.3)
     return (x, y, w, h)
 
 
@@ -157,9 +192,10 @@ def arrow(ax, p1, p2, color=INK, lw=0.9, style="-|>", ls="-",
 
 
 def label(ax, x, y, text, fontsize=8.0, color=INK, ha="center",
-          va="center", weight="normal", style="normal", zorder=5):
+          va="center", weight="normal", style="normal", zorder=5,
+          rotation=0):
     ax.text(x, y, text, fontsize=fontsize, color=color, ha=ha, va=va,
-            weight=weight, style=style, zorder=zorder)
+            weight=weight, style=style, zorder=zorder, rotation=rotation)
 
 
 def panel_tag(ax, tag, x=0.0, y=1.0, fontsize=9.0):

@@ -6,7 +6,7 @@ project:
     - paper-fa.qmd
 
 bibliography: references.bib
-csl: apa.csl
+csl: ieee.csl
 
 execute:
   enabled: false

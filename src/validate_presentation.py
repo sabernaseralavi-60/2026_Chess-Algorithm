@@ -303,8 +303,9 @@ def main():
             # section numbers: "2.11 Adaptive tactical control"
             for lab, title in (("sec-adaptive", "Adaptive tactical "
                                                 "control"),
-                               ("sec-blockade", "Blockade: pawn break"),
-                               ("sec-enpassant", "En passant")):
+                               ("sec-complexity", "Computational and "
+                                                  "memory complexity"),
+                               ("sec-ca", "The Chess Algorithm")):
                 num = fig_sec(lab, prefix="")
                 if f"{num} {title}" not in pdf_text:
                     bad.append(f"{lab}: figures say {num}")
@@ -320,7 +321,7 @@ def main():
             # equation numbers: the label follows its equation as "(5)"
             for lab, anchor in (("eq-queen", "omnidirectional sweep"),
                                 ("eq-enpassant",
-                                 "en-passant capture")):
+                                 "En passant (adaptive local capture)")):
                 num = fig_eq(lab, prefix="")
                 idx = pdf_text.find(anchor)
                 if idx < 0 or f"({num})" not in pdf_text[idx:idx + 900]:

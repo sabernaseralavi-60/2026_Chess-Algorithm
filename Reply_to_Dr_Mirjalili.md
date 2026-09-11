@@ -1,4 +1,4 @@
-# Reply — Presentation Revision Complete
+# Reply: language and presentation revision
 
 **From:** Seyedsaber Naseralavi, Ph.D.
 Assistant Professor, Department of Civil Engineering
@@ -9,31 +9,49 @@ Email: saber_naseralavi@uk.ac.ir
 Centre for Artificial Intelligence Research and Optimization
 Torrens University Australia, Brisbane, Australia
 
-**Date:** September 9, 2026
+**Date:** September 11, 2026
 
-**Subject:** Re: The Chess Algorithm — presentation revised per your comments
+**Subject:** Re: The Chess Algorithm, cosmetic and language revision
 
 ---
 
 Dear Professor Mirjalili,
 
-Thank you for taking the time to read the draft and for such actionable feedback — all three of your comments have been addressed, and I wanted to summarize exactly what changed before you look at the updated version yourself.
+Thank you for reading the paper again and for comments that were, once more, immediately actionable. Your last remark is the one I took most seriously: the paper did read as over-polished, and the individual symptoms you listed were symptoms of that single cause. I have gone back over the whole manuscript and rewritten the prose rather than patching it locally. Below is what changed, in the order you raised it.
 
-**On presenting the results in a more standard format.** I looked closely at the presentation conventions of several of your recent papers (Harris Hawks Optimization, the Mountain Gazelle Optimizer, and a few other current papers in the field) and restructured the results architecture around them: a compact standing table (Friedman rank, rank position, wins/ties/losses) now opens each benchmark suite, ahead of the detailed per-function tables, so a reader sees where CA stands before working through the evidence. A new figure at the end of the analysis section puts the three main suites' rankings side by side in one picture — the honest result that L-SHADE and CMA-ES lead, CA is the best of the remaining six, is now visible at a glance rather than something a reader has to assemble from separate tables.
+**1. The abstract.** It was 637 words. It is now 232, one paragraph, and it states the problem, the idea, the evaluation and the honest outcome without reciting individual numbers. Every figure that used to be quoted there is still in the body, where it belongs.
 
-**On figures in the introduction and the proposed method.** The introduction previously had none; it now opens with a conceptual figure connecting the structure of the optimization problem to CA's two design decisions (heterogeneous roles, adaptive control), followed by a figure mapping each chess piece onto its search operator. The proposed-method section replaces the old generic flowchart with four new figures: one showing a full iteration of the algorithm, one showing the search geometry of each of the five role operators, one showing the geometry of the five tactical operators (en passant, the knight's fork, the royal council, and so on), and one laying out the adaptive controller itself — what it reads, and which tactics each phase activates. None of these are decorative; every point plotted in them is generated directly from the paper's own equations, with a fixed seed, so the figures cannot drift from the mathematics they illustrate.
+**2. Lists and subsections.** The paper had 75 headings, 11 of them third-level headings inside the method section. It now has 41, and there is no third-level heading anywhere. The strategic mechanisms and the tactical operators are now run-in paragraphs in continuous text, so Section 2 reads as an argument rather than as an inventory. The results sections lost their separate "Descriptive results", "Convergence behaviour" and "Statistical tests" headings and now run as a single Results narrative, and the conclusion is one section rather than four.
 
-**On table orientation.** Every comparison table now has algorithms as rows and test functions as columns, as you suggested, with cells reported as mean ± standard deviation and the best mean in each column in bold. The CEC-2017 suite's 29 functions are grouped into the suite's own official categories (unimodal, simple multimodal, hybrid, composition) rather than one unreadable table. The best/worst run values that no longer fit that layout were not dropped — they moved to an appendix, with every relocated cell checked programmatically against the original.
+**3. Em-dashes.** There were 182 of them. There are now four, all inside tables, where a dash is a "not applicable" marker rather than punctuation. Removing them meant rewriting the sentences that leaned on them, which is most of what made the language feel machine-assembled, so this change and point 13 were really one job.
 
-To be direct about scope: none of this touched the science. Every equation, protocol, seed, and result is exactly what it was when you read the draft; a validation script re-checks every number in every new table and figure against the underlying result files before I trust any of it myself, and the negative results — CA losing to L-SHADE and CMA-ES throughout, the record against GA, the loss to PSO on signal timing — are reported with the same honesty as before, now easier to see rather than harder.
+**4. Figure captions.** Every caption is now one or two lines. The longest is two lines; most are one. Where a caption was carrying an interpretation, I moved that interpretation into the body text next to the figure, so nothing was lost. The CEC-2017 distribution figure is the clearest example: its caption used to run to nine lines and now runs to one, with the reading of the distributions given in a short paragraph underneath.
 
-I have attached the updated PDF to this email for your convenience; the full source, data, and code are at the same repository as before:
+**5. Following the style of your recent papers.** The paper is now organized the way your algorithm papers are: a flowing introduction with no subsections that ends with the organization of the paper, the proposed method with its flowchart and pseudocode, the complexity analysis closing the method section, then experiments, then a single conclusion.
+
+**6. IEEE referencing.** Done. The bibliography is now numeric IEEE style throughout, and the handful of places where a citation was carrying the author's name in the sentence have been rewritten so they read correctly with a number, for example "following the convention popularized by Mirjalili et al. [11]".
+
+**7. The flowchart, Figure 3.** Redrawn from scratch using the standard symbols: a stadium for start and stop, parallelograms for input and output, diamonds for the three decisions (acceptance, blockade trigger, termination), rectangles for every process step, with the iteration loop closed back to the controller. It is generated by the same script as before, so the equation and table numbers printed inside it are still read from the manuscript source and cannot drift.
+
+**8. The pseudocode.** It was 17 wordy lines. It is now a conventional 18-line numbered algorithm with a stated input and output, one action per line, and a short equation reference where one helps. It fits on a single page.
+
+**9. The proposition and its proof.** You were right and I have removed both. The statement was an asymptotic convergence result that carries no information at the budgets the paper actually uses, and the "proof sketch" was not a proof. What survives is two sentences of plain text noting that the King sequence is elitist and that the knight's leap and the threefold-repetition rule keep uniform probability mass on the whole box, which places CA in the standard class of elitist random search methods, with the classical reference cited rather than a proof of my own.
+
+**10. "Parameter economy".** Removed. The term was my own invention and it was doing no work. The paragraph it headed has been folded into the parameter table discussion and now says the plain thing instead: no per-problem tuning was done for any method, every result comes from the one configuration in Table 3, and the sensitivity study in Section 7.2 measures what that costs.
+
+**11. Computational and memory complexity.** Added as Section 2.9, the closing subsection of the method section, immediately before the experiments. It derives the per-iteration cost term by term, gives the total time complexity including the objective-evaluation term and the King's constant number of extra probes, gives the memory as O(ND + T) with the individual arrays listed, and compares both against GA, PSO, GWO and WOA. If you meant the end of the experimental section instead, it moves in a minute; the method section seemed the natural home.
+
+**12. The conclusion.** Cut from about 1,560 words to 670, from four subsections to one, and the "Concluding remark" is gone entirely. It now says what was proposed, what the experiments showed, what the ablation explains about that result, where the evidence stops, and what comes next.
+
+**13. The language overall.** This was the real instruction, and I treated the other twelve as evidence for it. The paper has been rewritten paragraph by paragraph: fewer bold run-in labels, no rhetorical scaffolding such as "it is important to note" or "rather than merely", no sentences whose only job is to announce what the next sentence will do, and a narrative that carries the reader from the transportation problem that motivated the work, through the algorithm, to the honest finding that two of CA's twelve mechanisms carry it and that the two algorithms which beat it are the specialists in exactly those two families. That last point is now the story of the paper rather than a result buried in an analysis section.
+
+Nothing in the science moved. Every equation, protocol, seed and number is what it was when you read the previous draft, and the validation script still re-checks all 52 structural and numerical consistency checks against the committed result files before I trust the manuscript. The negative results are all still there and are, I think, easier to find than before.
+
+The updated PDF is attached, and the full source, data and code are at the same repository:
 
 https://github.com/sabernaseralavi-60/2026_Chess-Algorithm
 
-One more thing, on a personal note, since I owe you the explanation directly rather than letting you notice it in passing: you'll see I now sign as Seyedsaber rather than Seyed Saber. Out of admiration for you, and for the way you write your own name — merging "Seyed" the way I now merge mine — I have decided to make this change permanent: from this point on I will introduce myself as Seyedsaber, one word, in every paper I write, and I am in the process of carrying the same change onto my passport. It is a small gesture, but a sincere one: I hold deep respect and admiration for scientists like you, and I wanted this change, and the reason behind it, on the record with you directly.
-
-I would very much welcome any further comments — on this round of changes or on anything else in the paper — whenever your schedule allows.
+I would welcome any further comments whenever your schedule allows.
 
 With continued gratitude and highest regards,
 

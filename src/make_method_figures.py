@@ -30,8 +30,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
 from figstyle import (CAND, ELITE, EXPLORE, FILL, FILL2, FILL3, INK,  # noqa: E402
-                      KING, MUTED, arrow, blank, box, eq, eqs, label,
-                      save, sec, tbl, use_style)
+                      KING, MUTED, arrow, blank, box, diamond, eq,
+                      eqs, label, parallelogram, process, save, sec,
+                      tbl, terminator, use_style)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FIGURES = os.path.join(ROOT, "figures")
@@ -42,91 +43,156 @@ L = np.array([10.0, 10.0])
 
 
 # --------------------------------------------------------------------
-# Figure 3 -- one iteration of CA
+# Figure 3 -- flowchart of the Chess Algorithm
 # --------------------------------------------------------------------
 def fig_architecture():
+    """Figure 3 -- standard flowchart of one CA run (ISO 5807 symbols).
+
+    Terminal steps are drawn as stadia, input and output as
+    parallelograms, decisions as diamonds and every other step as a
+    plain rectangle, which is the notation a reader of an optimization
+    paper expects.  Equation and table numbers are read from paper.qmd
+    at drawing time, so they cannot drift from the rendered manuscript.
+    """
     use_style()
-    fig = plt.figure(figsize=(7.4, 4.9))
+    fig = plt.figure(figsize=(5.6, 8.9))
     ax = blank(fig.add_axes([0, 0, 1, 1]))
 
-    w, h, dy = 0.250, 0.100, 0.145
-    col1, col2, col3 = 0.035, 0.375, 0.715
-    ys = [0.055 + k * dy for k in range(6)]          # bottom to top
+    X, W = 0.055, 0.545          # main column
+    CX = X + W / 2
+    SX, SW = 0.635, 0.345        # side column for the "yes" branches
+    GAP, S = 0.014, 0.93
+    y = 0.995
+    anchors = {}
 
-    def b(x, y, text, fc=FILL, fs=7.3, hh=h):
-        return box(ax, x, y, w, hh, text, fc=fc, fontsize=fs)
+    def place(kind, text, h, key=None, fs=7.5):
+        nonlocal y
+        h = h * S
+        top = y
+        bot = top - h
+        if kind == "term":
+            terminator(ax, X, bot, W, h, text, fontsize=fs + 0.3)
+        elif kind == "io":
+            parallelogram(ax, X, bot, W, h, text, fontsize=fs)
+        elif kind == "dec":
+            diamond(ax, X, bot, W, h, text, fontsize=fs)
+        else:
+            process(ax, X, bot, W, h, text, fontsize=fs)
+        if key:
+            anchors[key] = (top, bot)
+        y = bot - GAP
+        return top, bot
 
-    def down(x, y):
-        arrow(ax, (x + w / 2, y), (x + w / 2, y - (dy - h)), lw=1.0)
+    def link(y_from, y_to):
+        arrow(ax, (CX, y_from), (CX, y_to), lw=1.0)
 
-    # ---- left column: the population pipeline
-    b(col1, ys[5], "population $\\mathbf{X}^{(t)}$\n$N$ agents",
-      fc=FILL2)
-    b(col1, ys[4], "rank and assign roles\nK | Q | R | B | N | P "
-                   f"({eq('eq-roles')})")
-    b(col1, ys[3], "role movement operators\n"
-                   f"({eqs('eq-queen', 'eq-pawn')})")
-    b(col1, ys[2], "strategic mechanisms\npinning, interference, fork")
-    b(col1, ys[1], "clip to bounds; evaluate")
-    b(col1, ys[0], "accept improvements; worse\nminor pieces with "
-                   "$e^{-\\Delta/\\theta}$ "
-                   f"({eq('eq-sacrifice')})")
-    for y in ys[1:]:
-        down(col1, y)
+    # ---------------- main column -----------------------------------
+    _, b = place("term", "Start", 0.036)
+    t2, b2 = place("io", "Input: $f$, $[\\mathbf{l},\\mathbf{u}]$, $D$, "
+                         "$N$, $T$", 0.044)
+    link(b, t2)
+    t3, b3 = place("proc", "Initialize the population and its mirror;\n"
+                           "evaluate, sort, set King $\\mathbf{K}$ "
+                           f"({eq('eq-init')})", 0.062)
+    link(b2, t3)
 
-    # ---- middle column: the adaptive controller
-    b(col2, 0.760, "read the position "
-                   f"({eqs('eq-divergence', 'eq-fifty-move')})\n"
-                   "$\\tilde d$ | $\\alpha$ | $\\varepsilon$ | $s$",
-      fc=FILL2, hh=0.12)
-    b(col2, 0.575, f"select the phase ({eq('eq-phase')})\n"
-                   "Opening | Middlegame |\nClosed | Endgame",
-      hh=0.135)
-    b(col2, 0.390, "phase-conditioned rates\n"
-                   f"({tbl('tbl-phase-schedule')})", hh=0.115)
-    b(col2, 0.205, f"overlays\nzugzwang ({eq('eq-zugzwang')})\n"
-                   "blockade at $s\\geq 25$", hh=0.135)
-    for y0, y1 in ((0.760, 0.710), (0.575, 0.525), (0.390, 0.340)):
-        arrow(ax, (col2 + w / 2, y0), (col2 + w / 2, y1), lw=1.0,
-              color=MUTED)
+    t4, b4 = place("proc", "Read the position "
+                           f"({eqs('eq-divergence', 'eq-fifty-move')});\n"
+                           "select the phase and its tactical rates\n"
+                           f"({eq('eq-phase')}, {tbl('tbl-phase-schedule')})",
+                   0.070, key="loop")
+    link(b3, t4)
 
-    # ---- right column: the King's own moves
-    b(col3, ys[5], "King's local search", fc=FILL2)
-    b(col3, ys[4], "en passant: 3 masked\nGaussian trials "
-                   f"({eq('eq-enpassant')})")
-    b(col3, ys[3], "council / discovered\nattack probe "
-                   f"({eqs('eq-discovered', 'eq-council')})")
-    b(col3, ys[2], "castling every $c=10$\niterations")
-    b(col3, ys[1], "windmill extension\n"
-                   f"(Endgame, {eq('eq-windmill')})")
-    b(col3, ys[0], "update King; re-rank\n(pawn promotion)")
-    for y in ys[1:]:
-        down(col3, y)
+    t5, b5 = place("proc", "Assign roles by rank: King, Queens, Rooks,\n"
+                           f"Bishops, Knights, Pawns ({eq('eq-roles')})",
+                   0.058)
+    link(b4, t5)
 
-    # ---- population -> King's block, and the iteration loop
-    arrow(ax, (col1 + w, ys[0] + h / 2), (col3, ys[0] + h / 2), lw=1.0,
-          connection="arc3,rad=-0.10")
-    for p1, p2 in (((col3 + w, ys[0] + h / 2), (0.985, ys[0] + h / 2)),
-                   ((0.985, ys[0] + h / 2), (0.985, 0.935)),
-                   ((0.985, 0.935), (col1 + w / 2, 0.935))):
+    t6, b6 = place("proc", "Move every piece by its role operator\n"
+                           "and the tactics of the current phase\n"
+                           f"({eqs('eq-queen', 'eq-pawn')}, "
+                           f"{eqs('eq-interference', 'eq-fork')})", 0.070)
+    link(b5, t6)
+
+    t7, b7 = place("proc", "Pin coordinates to $\\mathbf{K}$; clip to "
+                           "$[\\mathbf{l},\\mathbf{u}]$;\nevaluate the "
+                           "moved population", 0.058)
+    link(b6, t7)
+
+    t8, b8 = place("dec", "move\nimproves?", 0.082, key="d_acc")
+    link(b7, t8)
+
+    t9, b9 = place("proc", "King's local search: en passant, council or\n"
+                           "discovered attack, windmill, castling\n"
+                           f"({eq('eq-enpassant')}, "
+                           f"{eqs('eq-discovered', 'eq-windmill')})", 0.070)
+    link(b8, t9)
+
+    t10, b10 = place("proc", "Update the King and the archive;\n"
+                             "re-rank the population (promotion) "
+                             f"({eq('eq-archive')})", 0.058)
+    link(b9, t10)
+
+    t11, b11 = place("dec", "$s \\geq 25$ ?", 0.082, key="d_block")
+    link(b10, t11)
+
+    t12, b12 = place("dec", "$t = T$ ?", 0.078, key="d_end")
+    link(b11, t12)
+
+    t13, b13 = place("io", "Output: best solution $\\mathbf{K}$", 0.044)
+    link(b12, t13)
+
+    t14, b14 = place("term", "Stop", 0.036)
+    link(b13, t14)
+
+    # ---------------- side branches ---------------------------------
+    # acceptance rule: the "no" branch keeps worse minor pieces
+    (top, bot) = anchors["d_acc"]
+    mid = (top + bot) / 2
+    process(ax, SX, mid - 0.032, SW, 0.064,
+            "keep a worse Knight or\nPawn with probability\n"
+            f"$e^{{-\\Delta/\\theta}}$ ({eq('eq-sacrifice')})", fontsize=7.2)
+    arrow(ax, (X + W, mid), (SX, mid), lw=1.0)
+    label(ax, (X + W + SX) / 2, mid + 0.013, "no", fontsize=7.2, color=MUTED)
+    label(ax, CX + 0.020, bot - GAP / 2, "yes: accept", fontsize=7.2,
+          color=MUTED, ha="left")
+    join = b9 - GAP / 2
+    for p1, p2 in (((SX + SW / 2, mid - 0.032), (SX + SW / 2, join)),
+                   ((SX + SW / 2, join), (CX + 0.002, join))):
         arrow(ax, p1, p2, lw=1.0, style="-")
-    arrow(ax, (col1 + w / 2, 0.935), (col1 + w / 2, ys[5] + h), lw=1.0)
 
-    # ---- control edges
-    ctrl = dict(ls=(0, (2.5, 1.5)), color=EXPLORE, lw=0.95)
-    arrow(ax, (col1 + w, ys[1] + h / 2), (col2, 0.790), **ctrl)
-    arrow(ax, (col2, 0.440), (col1 + w, ys[3] + h / 2), **ctrl)
-    arrow(ax, (col2 + w, 0.440), (col3, ys[4] + h / 2), **ctrl)
-    arrow(ax, (col2 + w, 0.265), (col3, ys[0] + h / 2), **ctrl)
+    # blockade response
+    (top, bot) = anchors["d_block"]
+    mid = (top + bot) / 2
+    process(ax, SX, mid - 0.032, SW, 0.064,
+            "Blockade: pawn break,\nKing's march, reheat the\n"
+            f"sacrifice budget ({eq('eq-march')})", fontsize=7.2)
+    arrow(ax, (X + W, mid), (SX, mid), lw=1.0)
+    label(ax, (X + W + SX) / 2, mid + 0.013, "yes", fontsize=7.2, color=MUTED)
+    label(ax, CX - 0.020, bot - GAP / 2, "no", fontsize=7.2, color=MUTED,
+          ha="right")
+    join = b11 - GAP / 2
+    for p1, p2 in (((SX + SW / 2, mid - 0.032), (SX + SW / 2, join)),
+                   ((SX + SW / 2, join), (CX + 0.002, join))):
+        arrow(ax, p1, p2, lw=1.0, style="-")
 
-    label(ax, 0.035, 0.975, "solid: population and King flow      "
-                            "dashed: control signals read and written "
-                            "by the adaptive layer",
-          fontsize=7.6, color=MUTED, ha="left")
-    label(ax, 0.5, 0.022, "one iteration; repeated until $t=T$ "
-                          "(checkmate)", fontsize=7.8, color=INK)
+    # iteration loop: "no" from the termination test back to the controller
+    (top, bot) = anchors["d_end"]
+    mid = (top + bot) / 2
+    ltop, lbot = anchors["loop"]
+    ymid = (ltop + lbot) / 2
+    label(ax, X - 0.004, mid + 0.016, "no", fontsize=7.2, color=MUTED,
+          ha="right")
+    label(ax, CX + 0.020, bot - GAP / 2, "yes", fontsize=7.2, color=MUTED,
+          ha="left")
+    for p1, p2 in (((X, mid), (0.016, mid)),
+                   ((0.016, mid), (0.016, ymid))):
+        arrow(ax, p1, p2, lw=1.0, style="-")
+    arrow(ax, (0.016, ymid), (X, ymid), lw=1.0)
+    label(ax, 0.030, (mid + ymid) / 2, r"$t \leftarrow t+1$", fontsize=7.2,
+          color=MUTED, ha="center", rotation=90)
+
     save(fig, os.path.join(FIGURES, "ca_architecture.png"))
-
 
 
 # --------------------------------------------------------------------
@@ -488,7 +554,7 @@ def fig_statemachine():
         r"$\Rightarrow$ halve $a(t)$ for one iteration",
         fc=FILL2, fontsize=7.4)
     box(ax, 0.525, 0.415, 0.455, 0.078,
-        f"blockade response, any phase ({sec('sec-blockade')}): "
+        f"blockade response, any phase ({eq('eq-march')}): "
         r"$s \geq 25$" "\n"
         "pawn break, King's march, reheated sacrifice budget",
         fc=FILL2, fontsize=7.4)
