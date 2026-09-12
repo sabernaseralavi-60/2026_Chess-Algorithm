@@ -65,6 +65,9 @@ format:
       model: 3p
       layout: onecolumn
       cite-style: number
+      # composed from two figures already in the paper (concept_motivation.png,
+      # standing_ranks.png) by src/make_graphical_abstract.py -- not new artwork
+      graphical-abstract: "\\includegraphics[width=\\linewidth]{figures/graphical_abstract.png}"
       highlights:
         - "Chess Algorithm: a metaheuristic with a ranked, role-differentiated population"
         - "A state machine adapts tactics to divergence, initiative and local-search success"

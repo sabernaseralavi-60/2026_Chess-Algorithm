@@ -102,6 +102,18 @@ def build(verify: bool = True, do_render: bool = True) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy2(PDF, out / f"{STEM}.pdf")
 
+    # Standalone copies for Editorial Manager's separate "Graphical Abstract"
+    # upload slot, in addition to the one embedded in the manuscript PDF via
+    # elsarticle's graphicalabstract environment (journal.graphical-abstract
+    # in paper.qmd). Optional: only copied if src/make_graphical_abstract.py
+    # has been run.
+    ga_png = ROOT / "figures" / "graphical_abstract.png"
+    ga_pdf = ROOT / "figures" / "graphical_abstract.pdf"
+    if ga_png.is_file():
+        shutil.copy2(ga_png, out / "graphical_abstract.png")
+    if ga_pdf.is_file():
+        shutil.copy2(ga_pdf, out / "graphical_abstract.pdf")
+
     if verify:
         verify_standalone(latex)
 
