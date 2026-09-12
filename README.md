@@ -14,7 +14,15 @@ Seyedali Mirjalili (Torrens University Australia)
 | HTML article (English) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>** | `_article/index.html` |
 | PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
 
-The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, run `quarto render` (outputs land in `_article/`).
+The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, render each format separately rather than with a bare `quarto render` (outputs land in `_article/`):
+
+```bash
+quarto render paper.qmd --to html
+quarto render paper.qmd --to pdf
+quarto render paper.qmd --to elsevier-pdf
+```
+
+**Do not render with no `--to`, and do not use `quarto publish` without `--no-render`.** Both render every format in paper.qmd in one process, and something in that combined pass — most likely metadata state the Elsevier extension's Lua filter sets for its own format (`cite-method: natbib`) — leaks into the plain `pdf` format's citeproc-based run, which otherwise needs no such thing. The result is every citation in `paper.pdf` rendering as an unresolved `[?]` instead of a number, silently (no error, no warning) — this shipped once and was only caught by inspecting the built PDF's text. `src/build_submission.py` is unaffected: it always renders the single `elsevier-pdf` target.
 
 ## What is this?
 
@@ -149,7 +157,8 @@ python src/make_concept_figures.py         # conceptual figures
 python src/make_method_figures.py          # mechanism figures
 python src/make_result_figures.py          # analysis figures
 python src/validate_presentation.py        # numerical + cross-reference validation
-quarto render                              # build HTML + PDF
+quarto render paper.qmd --to html          # build HTML (see the note above on
+quarto render paper.qmd --to pdf           #   why these must be separate calls)
 ```
 
 ### Transportation pipeline
@@ -169,17 +178,29 @@ Do not call `mealpy_comparison.py` on its own: it writes `table_mealpy_signal.md
 nine the manuscript reports, until `sota_addon_run.py --suite transport` adds the other two. The
 pipeline script exists so that dependency can't be missed; `python src/run_transportation_pipeline.py --validate-only` re-checks it against whatever is already on disk without re-running the experiment.
 
-quarto render                              # builds _article/ (EN: HTML + PDF; FA: docx)
-```
-
 All random seeds are fixed; the committed `results/` and `figures/` correspond exactly to the numbers in the paper. The CEC-2017 and CEC-2022 full runs each take on the order of tens of minutes to a few hours across their four partitions (mostly spent on the slower baselines, not CA); everything else completes in minutes.
 
 ## Publication & deployment
 
-GitHub Pages is configured to serve the `gh-pages` branch directly (Settings → Pages → Deploy from branch), so any push to `gh-pages` goes live within a couple of minutes with no build step on GitHub's side. The site is published like this:
+GitHub Pages is configured to serve the `gh-pages` branch directly (Settings → Pages → Deploy from branch), so any push to `gh-pages` goes live within a couple of minutes with no build step on GitHub's side.
+
+**Do not publish with `quarto publish gh-pages` on its own** — by default it re-renders the whole project itself, which triggers the combined-render citation bug described above and would ship a broken `paper.pdf`. Render each format separately first (see *Reproducing everything*), then publish without letting quarto touch the render:
 
 ```bash
-quarto publish gh-pages --no-prompt --no-browser
+quarto render paper.qmd --to html
+quarto render paper.qmd --to pdf
+quarto render paper.qmd --to elsevier-pdf
+quarto publish gh-pages --no-render --no-prompt --no-browser
+```
+
+If `--no-render` errors with "Output file index.html does not exist" (seen once in this project), publish manually instead: check out `gh-pages` into a worktree, mirror `index.html`, `figures/`, `paper_files/`, `paper.pdf`, `paper-elsevier.pdf`, and `.nojekyll` from `_article/` into it (excluding `_article/assets/` and `_article/results/`, which were never part of the published site), commit, and push. **Whichever way you publish, verify the citations afterward** — extract text from both downloaded PDFs and check for the literal string `[?`:
+
+```python
+import fitz  # PyMuPDF
+for f in ["paper.pdf", "paper-elsevier.pdf"]:
+    d = fitz.open(f)
+    text = "".join(p.get_text() for p in d)
+    print(f, text.count("[?"))  # must be 0
 ```
 
 A ready-made GitHub Actions workflow that would do this automatically on every push to `main` is kept at **`_ci/publish.yml`**, not yet active: two different tokens across this project's life have both lacked the fine-grained `Workflows` permission GitHub requires to write into `.github/workflows/`, so pushing or API-writing the file there is rejected even with `Contents: admin`. To activate it, either add the `Workflows: Read and write` permission to the token in use and push once —
