@@ -289,7 +289,7 @@ def _rewrite_transport_tables(all_finals, all_best_x, raw):
         ca = finals["CA"]
         best_mean = min(finals[a].mean() for a in algos)
         lines = ["| Algorithm | Mean | Std | Best | Worst | p-value (vs CA) "
-                 "| Result (α = 0.05) |",
+                 "| Result ($\alpha = 0.05$) |",
                  "|---|---:|---:|---:|---:|---:|---|"]
         for a in algos:
             B = finals[a]

@@ -56,12 +56,14 @@ Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO un
 
 ```
 ├── _quarto.yml                    # Quarto article project configuration
-├── paper.qmd                      # English article (renders to HTML + PDF)
+├── paper.qmd                      # English article (HTML + PDF + Elsevier camera-ready)
+├── _partials/before-body.tex      # elsarticle front matter, one fix over the extension's
+├── submission/                    # journal submission packages (see submission/README.md)
 ├── paper-fa.qmd                   # Persian article (renders to Word .docx, RTL)
 ├── adaptive_ca_math_update.md     # Full equations for the adaptive control layer
 ├── index.qmd, chapters/           # Legacy book sources (superseded by paper.qmd)
 ├── theme.scss                     # Chessboard-derived academic theme
-├── references.bib                 # Bibliography (APA, via apa.csl)
+├── references.bib                 # Bibliography (IEEE via ieee.csl; elsarticle-num for Elsevier)
 ├── src/
 │   ├── algorithms.py               # CA (chess_algorithm_v3), CA-static (chess_algorithm_v2),
 │   │                                #   GA, PSO, SA, GWO — shared interface; CA-v3 also
@@ -189,9 +191,21 @@ A ready-made GitHub Actions workflow is provided at **`_ci/publish.yml`**. It re
 >
 > Then enable **Settings → Pages → Deploy from branch → `gh-pages`** after the first successful run. Alternatively, render locally with `quarto render` and publish with `quarto publish gh-pages`.
 
+## Journal submission
+
+The manuscript is prepared for **Knowledge-Based Systems** (Elsevier) in `elsarticle` camera-ready format, with **Cluster Computing** (Springer) as the fallback. One command renders the manuscript and assembles a verified package:
+
+```bash
+python src/build_submission.py
+```
+
+It renders `paper.qmd --to elsevier-pdf`, collects the LaTeX source with its class file, bibliography style and figures into `submission/knowledge-based-systems/`, then re-compiles that collected copy in a scratch directory and fails if the log shows an undefined citation or reference or a dropped glyph — so the package is checked to build standalone, the way the publisher's system builds it.
+
+See **`submission/README.md`** for what to upload where, the items that still need a human decision, and why Cluster Computing needs a different template (it is Springer, not Elsevier).
+
 ## Authorship note
 
-Professor Seyedali Mirjalili is listed as an **invited co-author whose participation is pending confirmation** (see `Letter_to_Dr_Mirjalili.md`). His name will be retained in the author list only upon his explicit consent, and will otherwise be removed.
+Professor Seyedali Mirjalili's co-authorship is **confirmed**; he reviewed the manuscript and approved proceeding to submission. The earlier invitation and correspondence are kept in `Letter_to_Dr_Mirjalili.md` and `Reply_to_Dr_Mirjalili.md` for the record.
 
 ## Citation
 

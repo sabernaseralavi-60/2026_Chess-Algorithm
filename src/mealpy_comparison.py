@@ -225,7 +225,7 @@ def write_table(pname, finals, best_x):
     spec = PROBLEMS[pname]
     fmt = spec["fmt"]
     lines = ["| Algorithm | Mean | Std | Best | Worst | p-value (vs CA) "
-             "| Result (α = 0.05) |",
+             "| Result ($\alpha = 0.05$) |",
              "|---|---:|---:|---:|---:|---:|---|"]
     best_mean = min(finals[a].mean() for a in ALL_ALGS)
     ca = finals["CA"]

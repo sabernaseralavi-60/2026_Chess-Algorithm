@@ -5,11 +5,24 @@ author:
     corresponding: true
     email: saber_naseralavi@uk.ac.ir
     affiliations:
-      - name: "Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran"
+      - id: uk
+        name: "Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman"
+        city: Kerman
+        country: Iran
   - name: Seyedali Mirjalili
     affiliations:
-      - name: "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia"
+      - id: torrens
+        name: "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia"
+        city: Brisbane
+        country: Australia
 date: 2026-07-04
+keywords:
+  - Metaheuristic optimization
+  - Chess algorithm
+  - Adaptive search control
+  - CEC benchmark suites
+  - Traffic signal timing
+  - Berth allocation
 abstract: |
   This paper proposes the Chess Algorithm (CA), a population-based metaheuristic that draws its search logic from the strategy of chess rather than from foraging or hunting behaviour in nature. The population is deliberately heterogeneous: at every iteration the agents are ranked and assigned the roles of King, Queen, Rook, Bishop, Knight and Pawn, and each role moves under an operator abstracted from the geometry of the corresponding piece. A lightweight state machine reads the divergence, initiative and local-search success of the population each iteration and selects which strategic mechanisms are active, among them development, sacrifice, pinning, castling, en passant, interference, the knight's fork and a blockade response. Every mechanism is mapped explicitly onto an established operator family, so that the metaphor describes the composition without standing in for its specification. CA is evaluated on six classical functions in 30 dimensions, on all 29 usable CEC-2017 functions, on CEC-2022 at both official dimensionalities, on seven constrained engineering design problems and on two transportation problems, against GA, PSO, SA, GWO, WOA and the competition-grade optimizers L-SHADE and CMA-ES. CA obtains the best mean Friedman rank among the classical and widely used baselines on all three standard suites, while L-SHADE and CMA-ES rank ahead of it throughout. A per-mechanism ablation shows that two operators, the en-passant local capture and the knight's fork, carry most of CA's performance, which accounts for both halves of that result.
 format:
@@ -49,6 +62,44 @@ format:
         % resizebox rescaling
         \AtBeginEnvironment{longtable}{\scriptsize}
         \AtBeginEnvironment{tabular}{\scriptsize}
+  # Camera-ready Elsevier (elsarticle) build used for journal submission.
+  # Render with: quarto render paper.qmd --to elsevier-pdf
+  elsevier-pdf:
+    output-file: paper-elsevier.pdf
+    keep-tex: true
+    # local copy of the extension's front-matter partial; the only change is
+    # that countrysep is emitted empty when no postcode follows, which
+    # otherwise leaves a dangling comma after the country in \affiliation
+    template-partials:
+      - _partials/before-body.tex
+    # read by `when-meta` in the body to suppress the front-matter material
+    # that elsarticle already typesets from the YAML above
+    elsevier-submission: true
+    journal:
+      name: "Knowledge-Based Systems"
+      formatting: preprint
+      model: 3p
+      layout: onecolumn
+      cite-style: number
+      highlights:
+        - "Chess Algorithm: a metaheuristic with a ranked, role-differentiated population"
+        - "A state machine adapts tactics to divergence, initiative and local-search success"
+        - "Every mechanism is mapped to a known operator family and ablated in isolation"
+        - "Best mean Friedman rank among classical baselines on CEC-2017, CEC-2022, design"
+        - "Ablation shows en passant and the knight's fork carry most of the performance"
+    number-sections: true
+    fig-pos: "htbp"
+    include-in-header:
+      text: |
+        \usepackage{microtype}
+        \usepackage{booktabs}
+        \usepackage{etoolbox}
+        \usepackage{needspace}
+        % same rationale as the pdf format above: the transposed comparison
+        % tables carry one column per test function, so a smaller face inside
+        % table environments keeps them on the text block without rescaling
+        \AtBeginEnvironment{longtable}{\scriptsize}
+        \AtBeginEnvironment{tabular}{\scriptsize}
 ---
 
 ::: {.content-visible when-format="html"}
@@ -57,17 +108,15 @@ format:
 :::
 :::
 
+::: {.content-hidden when-meta="elsevier-submission"}
 ::: {.content-visible when-format="pdf"}
 | ^1^ *Seyedsaber Naseralavi (corresponding author,* `saber_naseralavi@uk.ac.ir`*), Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran.*
 | ^2^ *Seyedali Mirjalili, Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia.*
 | *An HTML version of this article, together with all code and data, is available at* <https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>*.*
 :::
 
-::: {.callout-note appearance="simple" icon=false}
-**Author note.** Dr. Seyedali Mirjalili is listed as an invited co-author; his participation is pending confirmation. The invitation reflects how much this study owes to his work on swarm and nature-inspired optimization, and his name will be retained only with his explicit consent.
-:::
-
 **Keywords:** metaheuristics; chess algorithm; adaptive optimization; global optimization; CEC-2017 benchmarks; constrained engineering design; traffic signal timing; berth allocation; transportation networks.
+:::
 
 # Introduction
 
@@ -867,6 +916,18 @@ The ablation of @sec-ablation explains this ordering instead of just recording i
 The boundaries of the evidence deserve to be stated as plainly as the results. Dimensions above 30, or above 20 on CEC-2022, were not tested. CA consumes 12.4% more evaluations than the shared core budget (@sec-cost), a small but real cost that does not favour it against L-SHADE at 3.3% or against CMA-ES. The transportation studies use analytic delay and penalty models rather than microsimulation. The ablation and sensitivity analyses cover six representative problems, and the two phase thresholds were checked on two functions rather than swept exhaustively. Finally, CA loses ten of the 29 CEC-2017 functions to GA, and those ten cluster on landscapes whose basins lie as far apart as the search domain is wide, where the BLX-$\alpha$ crossover of GA can cross the whole domain in a single step and no CA operator can.
 
 That last gap points to the most natural extension. A promotion operator, in which an agent that survives several blockade events without improving the King is granted a macro-crossover against a distant population member for one iteration, would give CA the long-range move it currently lacks, much as a pawn reaching the eighth rank does not improve gradually but changes in kind. A second and more direct line follows from the ablation: replacing the fixed adaptation rates of en passant and the knight's fork with success-history or covariance adaptation is now a specific and testable hypothesis about closing the gap to L-SHADE and CMA-ES rather than a speculative one. Binary, discrete and multi-objective variants of CA, a formal analysis of the en-passant rule as a $(1+\lambda)$ evolution strategy embedded in a population method, and simulation-based transportation objectives are further directions we intend to pursue.
+
+# CRediT authorship contribution statement {.unnumbered}
+
+**Seyedsaber Naseralavi:** Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Visualization, Writing -- original draft, Writing -- review & editing. **Seyedali Mirjalili:** Conceptualization, Methodology, Writing -- review & editing, Supervision.
+
+# Declaration of competing interest {.unnumbered}
+
+The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+# Declaration of generative AI and AI-assisted technologies in the writing process {.unnumbered}
+
+During the preparation of this work the authors used a large language model assistant to support code review, manuscript copy-editing and the preparation of figures and tables from committed result files. The authors reviewed and edited the content as needed and take full responsibility for the content of the published article.
 
 # Data and code availability {.unnumbered}
 

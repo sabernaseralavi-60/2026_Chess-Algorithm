@@ -220,7 +220,7 @@ def make_outputs(curves, finals, bests):
 
     # Wilcoxon: CA vs each
     with open("../results/table_traffic_wilcoxon.md", "w", encoding="utf8") as fmd:
-        fmd.write("| Comparison | p-value | Result (α = 0.05) |\n|---|---:|---|\n")
+        fmd.write("| Comparison | p-value | Result ($\alpha = 0.05$) |\n|---|---:|---|\n")
         for alg in ALGS[1:]:
             _, p = stats.ranksums(finals["CA"], finals[alg])
             verdict = ("CA better" if (p < .05 and finals["CA"].mean()
