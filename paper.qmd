@@ -38,34 +38,18 @@ format:
     fig-align: center
     link-external-newwindow: true
     format-links: true
-  pdf:
-    documentclass: scrartcl
-    papersize: a4
-    number-sections: true
-    colorlinks: true
-    linkcolor: "chessdark"
-    citecolor: "chessdark"
-    urlcolor: "chessdark"
-    geometry:
-      - margin=2.6cm
-    include-in-header:
-      text: |
-        \usepackage{xcolor}
-        \definecolor{chessdark}{HTML}{7a5230}
-        \usepackage{microtype}
-        \usepackage{booktabs}
-        \usepackage{etoolbox}
-        \usepackage{needspace}
-        % the transposed comparison tables put one column per test
-        % function, so they are wide; a smaller face inside table
-        % environments keeps them on the A4 text block without
-        % resizebox rescaling
-        \AtBeginEnvironment{longtable}{\scriptsize}
-        \AtBeginEnvironment{tabular}{\scriptsize}
-  # Camera-ready Elsevier (elsarticle) build used for journal submission.
+  # The Elsevier build is the only PDF this project produces -- a second,
+  # differently-styled "generic" PDF (scrartcl, no journal front matter)
+  # was maintained here until 2026-09-12 and was dropped as redundant now
+  # that the Elsevier build is the camera-ready target. This also removes
+  # the one existing way this file could trigger the combined-render
+  # citation bug documented in src/publish_site.py (rendering a plain pdf
+  # format and elsevier-pdf together in one process corrupted the plain
+  # one's citations); with only one PDF format left the risk is gone for
+  # this project, though src/publish_site.py still renders formats
+  # separately on principle.
   # Render with: quarto render paper.qmd --to elsevier-pdf
   elsevier-pdf:
-    output-file: paper-elsevier.pdf
     keep-tex: true
     # local copy of the extension's front-matter partial; the only change is
     # that countrysep is emitted empty when no postcode follows, which
