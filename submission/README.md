@@ -36,12 +36,9 @@ the Elsevier format sets `keep-tex`. Pass `--no-render` to reuse an existing
 
 Everything the script generates is gitignored, in the same way `_article/` is:
 the committed things are the manuscript source and these documents, and the
-package is rebuilt from them. **Tag the commit you submit from** so the exact
-package can be regenerated later:
-
-```sh
-git tag submission-aei-2026-09 && git push origin submission-aei-2026-09
-```
+package is rebuilt from them. Note which commit hash you submitted from
+(`git log -1 --format=%H`) so the exact package can be regenerated later; tag
+it once GitHub access is restored (see *Note on the repository* below).
 
 Format details live in the `elsevier-pdf` block of `paper.qmd`:
 `elsarticle` with `preprint,3p,onecolumn,number`, `elsarticle-num` bibliography
@@ -59,7 +56,6 @@ survive a two-column layout.
 | `cover_letter.md` | Cover letter |
 | `highlights.md` | Highlights |
 | `declaration_of_interest.md` | Declaration of Interest + CRediT |
-| `suggested_reviewers.md` | working notes — **not** uploaded |
 
 The CRediT statement, the competing-interest declaration, the generative-AI
 declaration and the data-availability statement are also inside the manuscript
@@ -74,23 +70,42 @@ quarto render submission/advanced-engineering-informatics/cover_letter.md
 
 ## Open items — these need you, not the build
 
-1. **Dr. Mirjalili's editorial roles.** He sits on the editorial boards of
-   several optimization journals. If he holds a role at the journal being
-   submitted to, Elsevier requires it to be declared at submission and the paper
-   is handled by an independent editor. Check this for Advanced Engineering
-   Informatics *and* for Knowledge-Based Systems before submitting, and amend
-   `declaration_of_interest.md` if it applies.
+1. **Dr. Mirjalili's editorial roles — checked, nothing found.** A web search
+   (Elsevier's own editorial-board pages plus his institutional profile at
+   Torrens) turned up board memberships at *Advances in Engineering Software*,
+   *Engineering Applications of Artificial Intelligence*, *Applied Soft
+   Computing*, *Neurocomputing*, *Computers in Biology and Medicine*,
+   *Healthcare Analytics*, *Applied Intelligence* and *Decision Analytics* —
+   **none of them Advanced Engineering Informatics or Knowledge-Based
+   Systems**. Web search is not authoritative for something this specific
+   (boards change, profiles lag); if you or he can confirm directly, that is
+   better evidence than this search. Nothing in `declaration_of_interest.md`
+   needs to change unless that confirmation says otherwise.
 2. **Cover letter salutation.** It opens with "Dear Editor". Personalise it with
    the current Editor-in-Chief's name if you would rather.
-3. **Suggested reviewers.** `suggested_reviewers.md` has candidates but
-   deliberately no email addresses. Verify affiliations and look up institutional
-   emails before entering them.
-4. **ORCID and institutional details** for both authors are entered in Editorial
+3. **ORCID and institutional details** for both authors are entered in Editorial
    Manager, not in the files here.
-5. **Confirm the author note is gone.** The manuscript previously carried a note
+4. **Confirm the author note is gone.** The manuscript previously carried a note
    saying Dr. Mirjalili's co-authorship was pending his consent. His approval to
    proceed removed the reason for it and it has been deleted; confirm you are
    content with that before submitting.
+5. **Suggested reviewers left blank.** Most Elsevier journals treat this field
+   as optional; nothing is pre-filled here, so it is either skipped in Editorial
+   Manager or filled in there directly if you want to name anyone.
+
+## Note on the repository
+
+The GitHub repository is currently **out of sync with the submitted
+manuscript** — the presentation and language revisions this submission is
+built from are committed locally on `presentation-revision-2026-09` but not
+yet pushed, and pushing needs GitHub sign-in, which is currently blocked.
+For that reason, every claim in the manuscript and cover letter that the
+code, data and repository are already "openly available" has been reworded to
+say they **will be made available upon acceptance** — true regardless of when
+the push happens, and it avoids pointing a reviewer at a repository that does
+not yet match what they are reading. Once GitHub access is restored: push
+`presentation-revision-2026-09`, merge to `main`, and tag the commit this
+package was built from.
 
 ## Fallbacks
 

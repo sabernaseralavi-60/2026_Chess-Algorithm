@@ -31,7 +31,7 @@ Second, in the course of validating the benchmark study we ran a two-library dat
 
 The work is evaluated on six classical functions in 30 dimensions, on all 29 usable CEC-2017 functions, on CEC-2022 at both official dimensionalities, on seven constrained engineering design problems, and on two transportation problems: arterial signal coordination and continuous berth allocation. The engineering and transportation studies, together with the reproducibility apparatus, are why we believe the manuscript belongs in *Advanced Engineering Informatics* rather than in a purely algorithmic venue.
 
-All source code, experiment scripts, raw results and manuscript sources are openly available at <https://github.com/sabernaseralavi-60/2026_Chess-Algorithm>. Random seeds are fixed throughout, and every number reported in the paper corresponds to a committed output in that repository.
+All source code, experiment scripts and raw results are maintained under version control for exact reproducibility, with fixed random seeds throughout; every number reported in the paper corresponds to a committed output. The complete repository will be made publicly available at <https://github.com/sabernaseralavi-60/2026_Chess-Algorithm> upon acceptance.
 
 We confirm that this manuscript is original, has not been published previously, and is not under consideration for publication elsewhere. All authors have read and approved the submitted version and declare no competing interests.
 
