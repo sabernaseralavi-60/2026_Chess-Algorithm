@@ -176,18 +176,22 @@ All random seeds are fixed; the committed `results/` and `figures/` correspond e
 
 ## Publication & deployment
 
-A ready-made GitHub Actions workflow is provided at **`_ci/publish.yml`**. It renders the Quarto article (HTML + PDF via TinyTeX) on every push to `main` and publishes it to the `gh-pages` branch.
+GitHub Pages is configured to serve the `gh-pages` branch directly (Settings → Pages → Deploy from branch), so any push to `gh-pages` goes live within a couple of minutes with no build step on GitHub's side. The site is published like this:
 
-> **One-time activation required.** The access token used to create this repository did not carry the `workflow` scope, so GitHub rejected pushing the file directly into `.github/workflows/`. To activate CI, run once from a clone (or move the file in the GitHub web editor):
->
-> ```bash
-> mkdir -p .github/workflows
-> git mv _ci/publish.yml .github/workflows/publish.yml
-> git commit -m "Activate publish workflow"
-> git push
-> ```
->
-> Then enable **Settings → Pages → Deploy from branch → `gh-pages`** after the first successful run. Alternatively, render locally with `quarto render` and publish with `quarto publish gh-pages`.
+```bash
+quarto publish gh-pages --no-prompt --no-browser
+```
+
+A ready-made GitHub Actions workflow that would do this automatically on every push to `main` is kept at **`_ci/publish.yml`**, not yet active: two different tokens across this project's life have both lacked the fine-grained `Workflows` permission GitHub requires to write into `.github/workflows/`, so pushing or API-writing the file there is rejected even with `Contents: admin`. To activate it, either add the `Workflows: Read and write` permission to the token in use and push once —
+
+```bash
+mkdir -p .github/workflows
+git mv _ci/publish.yml .github/workflows/publish.yml
+git commit -m "Activate publish workflow"
+git push
+```
+
+— or move the file in the GitHub web editor, which isn't subject to this restriction. Until then, run the `quarto publish` command above after any content change.
 
 ## Journal submission
 
