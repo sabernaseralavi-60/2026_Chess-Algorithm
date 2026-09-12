@@ -3,7 +3,6 @@ project:
   output-dir: _article
   render:
     - paper.qmd
-    - paper-fa.qmd
 
 bibliography: references.bib
 csl: ieee.csl

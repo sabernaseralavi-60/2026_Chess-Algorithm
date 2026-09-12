@@ -95,17 +95,13 @@ quarto render submission/advanced-engineering-informatics/cover_letter.md
 
 ## Note on the repository
 
-The GitHub repository is currently **out of sync with the submitted
-manuscript** — the presentation and language revisions this submission is
-built from are committed locally on `presentation-revision-2026-09` but not
-yet pushed, and pushing needs GitHub sign-in, which is currently blocked.
-For that reason, every claim in the manuscript and cover letter that the
-code, data and repository are already "openly available" has been reworded to
-say they **will be made available upon acceptance** — true regardless of when
-the push happens, and it avoids pointing a reviewer at a repository that does
-not yet match what they are reading. Once GitHub access is restored: push
-`presentation-revision-2026-09`, merge to `main`, and tag the commit this
-package was built from.
+GitHub access was briefly lost and has since been restored, so the
+manuscript's and cover letter's "openly available" claims are written as
+accurate. Before submitting, confirm the live site at
+<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/> actually reflects
+this manuscript (push `presentation-revision-2026-09`, fast-forward merge to
+`main`, let CI redeploy, then check). Tag the commit this package was built
+from once that is done: `git tag submission-aei-2026-09 && git push origin submission-aei-2026-09`.
 
 ## Fallbacks
 

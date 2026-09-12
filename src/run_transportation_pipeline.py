@@ -24,8 +24,7 @@ Running step 1 without step 2 produces tables that silently omit the
 two competition-grade baselines the manuscript reports throughout
 Sec. 9 -- there is no error, just seven rows where the paper expects
 nine. That happened once during the 2026-09 presentation revision
-(see VALIDATION_REPORT.md, "Status of the mealpy re-run") because
-nothing in the repository stated the dependency.
+because nothing in the repository stated the dependency.
 
 What this script does
 ----------------------

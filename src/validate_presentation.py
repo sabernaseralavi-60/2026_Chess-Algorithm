@@ -365,10 +365,9 @@ def main():
     # ---- transportation tables must carry the competition-grade
     # baselines: mealpy_comparison.py alone writes only CA + six mealpy
     # algorithms, and sota_addon_run.py must run afterward to add
-    # L-SHADE and CMA-ES; this once silently produced incomplete
-    # tables (see VALIDATION_REPORT.md, "Status of the mealpy re-run",
-    # and src/run_transportation_pipeline.py, which is now the only
-    # supported way to reproduce them)
+    # L-SHADE and CMA-ES; this once silently produced incomplete tables,
+    # so src/run_transportation_pipeline.py is now the only supported
+    # way to reproduce them
     required = ["L-SHADE", "CMA-ES"]
     for name in ("table_mealpy_signal.md", "table_mealpy_berth.md",
                 "table_berth_gap.md"):
