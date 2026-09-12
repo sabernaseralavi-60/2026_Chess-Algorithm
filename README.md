@@ -12,17 +12,16 @@ Seyedali Mirjalili (Torrens University Australia)
 | Output | Online | Local build |
 |---|---|---|
 | HTML article (English) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>** | `_article/index.html` |
-| PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
+| PDF manuscript (English, Elsevier camera-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
 
-The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, render each format separately rather than with a bare `quarto render` (outputs land in `_article/`):
+The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, render each format with its own separate call rather than a bare `quarto render` (outputs land in `_article/`):
 
 ```bash
 quarto render paper.qmd --to html
-quarto render paper.qmd --to pdf
 quarto render paper.qmd --to elsevier-pdf
 ```
 
-**Do not render with no `--to`, and do not use `quarto publish` without `--no-render`.** Both render every format in paper.qmd in one process, and something in that combined pass — most likely metadata state the Elsevier extension's Lua filter sets for its own format (`cite-method: natbib`) — leaks into the plain `pdf` format's citeproc-based run, which otherwise needs no such thing. The result is every citation in `paper.pdf` rendering as an unresolved `[?]` instead of a number, silently (no error, no warning) — this shipped once and was only caught by inspecting the built PDF's text. `src/build_submission.py` is unaffected: it always renders the single `elsevier-pdf` target.
+**Do not render with no `--to`, and do not use `quarto publish` without `--no-render`.** Rendering every format in paper.qmd together in one process was once shown to corrupt citations when this project also carried a second, separately-styled PDF format alongside the Elsevier one — every citation in that other PDF rendered as an unresolved `[?]` instead of a number, silently, no error in the log. That second format was dropped as redundant once the Elsevier build became the sole camera-ready target, which removes this project's only way to trigger that bug — but `src/publish_site.py` still renders each format with its own call and verifies the result, on principle, since a future format addition could reintroduce the same risk.
 
 ## What is this?
 
@@ -158,7 +157,7 @@ python src/make_method_figures.py          # mechanism figures
 python src/make_result_figures.py          # analysis figures
 python src/validate_presentation.py        # numerical + cross-reference validation
 quarto render paper.qmd --to html          # build HTML (see the note above on
-quarto render paper.qmd --to pdf           #   why these must be separate calls)
+quarto render paper.qmd --to elsevier-pdf  #   why these must be separate calls)
 ```
 
 ### Transportation pipeline
@@ -184,24 +183,13 @@ All random seeds are fixed; the committed `results/` and `figures/` correspond e
 
 GitHub Pages is configured to serve the `gh-pages` branch directly (Settings → Pages → Deploy from branch), so any push to `gh-pages` goes live within a couple of minutes with no build step on GitHub's side.
 
-**Do not publish with `quarto publish gh-pages` on its own** — by default it re-renders the whole project itself, which triggers the combined-render citation bug described above and would ship a broken `paper.pdf`. Render each format separately first (see *Reproducing everything*), then publish without letting quarto touch the render:
+**Do not publish with a bare `quarto publish gh-pages`** — by default it re-renders the whole project itself in one process, which is what caused the combined-render citation bug described above. Use the script instead:
 
 ```bash
-quarto render paper.qmd --to html
-quarto render paper.qmd --to pdf
-quarto render paper.qmd --to elsevier-pdf
-quarto publish gh-pages --no-render --no-prompt --no-browser
+python src/publish_site.py
 ```
 
-If `--no-render` errors with "Output file index.html does not exist" (seen once in this project), publish manually instead: check out `gh-pages` into a worktree, mirror `index.html`, `figures/`, `paper_files/`, `paper.pdf`, `paper-elsevier.pdf`, and `.nojekyll` from `_article/` into it (excluding `_article/assets/` and `_article/results/`, which were never part of the published site), commit, and push. **Whichever way you publish, verify the citations afterward** — extract text from both downloaded PDFs and check for the literal string `[?`:
-
-```python
-import fitz  # PyMuPDF
-for f in ["paper.pdf", "paper-elsevier.pdf"]:
-    d = fitz.open(f)
-    text = "".join(p.get_text() for p in d)
-    print(f, text.count("[?"))  # must be 0
-```
+It renders `html` and `elsevier-pdf` as separate calls, verifies the PDF contains no unresolved `[?` citation markers, and publishes `_article/`'s contents to `gh-pages` through a throwaway worktree — never through `quarto publish`, so quarto never gets the chance to re-render everything together. `--no-render` reuses an existing `_article/` build; `--no-push` stops after verification.
 
 A ready-made GitHub Actions workflow that would do this automatically on every push to `main` is kept at **`_ci/publish.yml`**, not yet active: two different tokens across this project's life have both lacked the fine-grained `Workflows` permission GitHub requires to write into `.github/workflows/`, so pushing or API-writing the file there is rejected even with `Contents: admin`. To activate it, either add the `Workflows: Read and write` permission to the token in use and push once —
 

@@ -1,8 +1,9 @@
 """Render the camera-ready manuscript and assemble the Elsevier submission package.
 
 ``quarto render paper.qmd --to elsevier-pdf`` writes ``paper.tex`` (kept via
-``keep-tex``) next to the source and ``_article/paper-elsevier.pdf``.  This
-script drives that render itself, collects the LaTeX source together with
+``keep-tex``) next to the source and ``_article/paper.pdf`` -- the Elsevier
+build is this project's only PDF format, so it needs no output-file override.
+This script drives that render itself, collects the LaTeX source together with
 everything it needs into ``submission/<journal>/``, and then re-compiles the
 collected copy in a scratch directory, so the package is checked to build on its
 own rather than only inside the project tree.
@@ -33,7 +34,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 TEX = ROOT / "paper.tex"
-PDF = ROOT / "_article" / "paper-elsevier.pdf"
+PDF = ROOT / "_article" / "paper.pdf"
 BIB = ROOT / "references.bib"
 CLS = ROOT / "_extensions" / "quarto-journals" / "elsevier" / "elsarticle.cls"
 BST = ROOT / "_extensions" / "quarto-journals" / "elsevier" / "bib" / "elsarticle-num.bst"
