@@ -3,7 +3,9 @@
 **A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering**
 
 Seyedsaber Naseralavi (Shahid Bahonar University of Kerman) — corresponding author
-Seyedali Mirjalili (Torrens University Australia) — *invited co-author; participation pending confirmation*
+Seyedali Mirjalili (Torrens University Australia)
+
+**Status:** being submitted to *Knowledge-Based Systems* (Elsevier).
 
 ## 📖 Where to read the paper
 
@@ -13,8 +15,6 @@ Seyedali Mirjalili (Torrens University Australia) — *invited co-author; partic
 | PDF manuscript (English, journal-ready) | **<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/paper.pdf>** | `_article/paper.pdf` |
 
 The online copies are published to GitHub Pages from the `gh-pages` branch. To rebuild locally, run `quarto render` (outputs land in `_article/`).
-
-A Persian (RTL) Word translation can be built locally from `paper-fa.qmd` (`quarto render paper-fa.qmd --to docx`); it is kept as a local-only build and is not published online.
 
 ## What is this?
 
@@ -59,7 +59,6 @@ Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO un
 ├── paper.qmd                      # English article (HTML + PDF + Elsevier camera-ready)
 ├── _partials/before-body.tex      # elsarticle front matter, one fix over the extension's
 ├── submission/                    # journal submission packages (see submission/README.md)
-├── paper-fa.qmd                   # Persian article (renders to Word .docx, RTL)
 ├── adaptive_ca_math_update.md     # Full equations for the adaptive control layer
 ├── index.qmd, chapters/           # Legacy book sources (superseded by paper.qmd)
 ├── theme.scss                     # Chessboard-derived academic theme
@@ -105,7 +104,6 @@ Six classical 30-D benchmark functions (F1–F6) against GA, PSO, SA, and GWO un
 ├── results/                        # Committed CSVs + Markdown tables (reproducible)
 ├── figures/                        # Committed publication figures (300 DPI)
 ├── assets/                         # Author photo
-├── Letter_to_Dr_Mirjalili.md
 └── _ci/publish.yml                 # Render & deploy workflow (see below)
 ```
 
@@ -203,19 +201,15 @@ It renders `paper.qmd --to elsevier-pdf`, collects the LaTeX source with its cla
 
 See **`submission/README.md`** for what to upload where, the items that still need a human decision, and why Cluster Computing needs a different template (it is Springer, not Elsevier).
 
-## Authorship note
-
-Professor Seyedali Mirjalili's co-authorship is **confirmed**; he reviewed the manuscript and approved proceeding to submission. The earlier invitation and correspondence are kept in `Letter_to_Dr_Mirjalili.md` and `Reply_to_Dr_Mirjalili.md` for the record.
-
 ## Citation
 
-If you use CA in your research, please cite this repository until a journal version is available:
+The manuscript is being submitted to *Knowledge-Based Systems*. Until a journal version is available, please cite this repository:
 
 ```bibtex
 @misc{naseralavi2026chess,
   title        = {The Chess Algorithm: A Novel Metaheuristic Optimization Technique
                   with Applications in Transportation Network Engineering},
-  author       = {Naseralavi, Seyed Saber},
+  author       = {Naseralavi, Seyedsaber and Mirjalili, Seyedali},
   year         = {2026},
   howpublished = {Preprint},
   url          = {https://github.com/sabernaseralavi-60/2026_Chess-Algorithm}
