@@ -1,4 +1,4 @@
-| Algorithm | Mean | Std | Best | Worst | p-value (vs CA) | Result (α = 0.05) |
+| Algorithm | Mean | Std | Best | Worst | p-value (vs CA) | Result ($\alpha = 0.05$) |
 |---|---:|---:|---:|---:|---:|---|
 | CA | 7934.2 | 973.8 | 6277.9 | 10257.8 | — | — |
 | WOA | 45507.4 | 21345.8 | 9388.5 | 93564.7 | 3.879e-11 | CA better |

@@ -1,4 +1,4 @@
-| Function | Comparison | p-value | Result (α = 0.05) |
+| Function | Comparison | p-value | Result ($\alpha = 0.05$) |
 |---|---|---:|---|
 | Sphere | CA vs CA-static | 1.480e-03 | CA worse |
 | Sphere | CA vs GA | 2.872e-11 | CA better |

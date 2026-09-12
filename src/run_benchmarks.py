@@ -126,7 +126,7 @@ def make_tables(finals):
                           f"{sci(r.Std)} | {sci(r.Best)} | {sci(r.Worst)} |\n")
 
     with open(f"{OUT_RES}/table_wilcoxon.md", "w", encoding="utf8") as fmd:
-        fmd.write("| Function | Comparison | p-value | Result (α = 0.05) |\n")
+        fmd.write("| Function | Comparison | p-value | Result ($\alpha = 0.05$) |\n")
         fmd.write("|---|---|---:|---|\n")
         for _, r in wf.iterrows():
             fmd.write(f"| {r['Function']} | {r['Comparison']} | "

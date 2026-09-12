@@ -1,6 +1,11 @@
 _book/
 _article/
 _freeze/
+# camera-ready build artifacts: regenerate with src/build_submission.py
+paper.tex
+submission/**/latex-source/
+submission/**/*.zip
+submission/**/*.pdf
 .quarto/
 /.quarto/
 /.luarc.json
@@ -14,3 +19,4 @@ chapters/*_files/
 instructions.md
 .claude/
 PLAN_cec2022_and_reply.md
+*.spl
