@@ -56,8 +56,18 @@ STRAY_ROOT_FILES = ["paper.tex", "paper.aux", "paper.bbl", "paper.blg",
 
 
 def referenced_figures() -> list[str]:
+    """Figures the rendered HTML/PDF body actually needs in _article/figures/.
+
+    Scans only the document body, past the closing '---' of the YAML front
+    matter: the graphical-abstract path there (journal.graphical-abstract)
+    also matches a naive 'figures/...' search, but it is LaTeX embedded
+    straight from the repo's figures/ directory during the elsevier-pdf
+    compile -- quarto never copies it into _article/figures/, because
+    nothing in the rendered HTML/PDF body actually points at it there.
+    """
     text = PAPER_QMD.read_text(encoding="utf-8")
-    names = sorted(set(re.findall(r"figures/([^})\s]+)", text)))
+    body = text.split("\n---\n", 1)[-1]  # drop the YAML front matter only
+    names = sorted(set(re.findall(r"figures/([^})\s]+)", body)))
     missing = [n for n in names if not (ARTICLE / "figures" / n).is_file()]
     if missing:
         raise SystemExit(f"figures referenced but not rendered: {missing}")
