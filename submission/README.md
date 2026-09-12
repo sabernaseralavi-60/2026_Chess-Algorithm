@@ -95,13 +95,20 @@ quarto render submission/advanced-engineering-informatics/cover_letter.md
 
 ## Note on the repository
 
-GitHub access was briefly lost and has since been restored, so the
-manuscript's and cover letter's "openly available" claims are written as
-accurate. Before submitting, confirm the live site at
-<https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/> actually reflects
-this manuscript (push `presentation-revision-2026-09`, fast-forward merge to
-`main`, let CI redeploy, then check). Tag the commit this package was built
-from once that is done: `git tag submission-aei-2026-09 && git push origin submission-aei-2026-09`.
+GitHub access was briefly lost and has since been restored. `presentation-revision-2026-09`
+is pushed and fast-forward merged into `main` (now at `eee3745`), the
+Persian draft and unrelated personal files are gone from the tree, and the
+live site at <https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/> has
+been redeployed and verified to match this manuscript — confirmed by fetching
+the page directly (no stale "pending confirmation" or Persian-file text, the
+"openly available" wording present). The manuscript's and cover letter's
+"openly available" claims are accurate.
+
+Tag the submitted commit for the record:
+
+```sh
+git tag submission-aei-2026-09 && git push origin submission-aei-2026-09
+```
 
 ## Fallbacks
 
