@@ -187,7 +187,7 @@ def fig_abstraction():
     ax = blank(fig.add_axes([0, 0, 1, 1]))
 
     cols = [(0.045, "Piece"), (0.215, "Move geometry"),
-            (0.45, "Search behaviour around the incumbent"),
+            (0.45, "Search behavior around the incumbent"),
             (0.845, "Primary contribution")]
     for x, t in cols:
         label(ax, x, 0.955, t, fontsize=8.6, weight="bold", ha="left")

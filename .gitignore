@@ -29,3 +29,5 @@ instructions.md
 .claude/
 PLAN_cec2022_and_reply.md
 *.spl
+submission/**/figures_for_upload/
+submission/**/*.docx

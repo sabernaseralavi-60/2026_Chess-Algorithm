@@ -101,17 +101,27 @@ def build(verify: bool = True, do_render: bool = True) -> Path:
     out.mkdir(parents=True, exist_ok=True)
     shutil.copy2(PDF, out / f"{STEM}.pdf")
 
-    # Standalone copies for Editorial Manager's separate "Graphical Abstract"
-    # upload slot, in addition to the one embedded in the manuscript PDF via
-    # elsarticle's graphicalabstract environment (journal.graphical-abstract
-    # in paper.qmd). Optional: only copied if src/make_graphical_abstract.py
-    # has been run.
-    ga_png = ROOT / "figures" / "graphical_abstract.png"
-    ga_pdf = ROOT / "figures" / "graphical_abstract.pdf"
-    if ga_png.is_file():
-        shutil.copy2(ga_png, out / "graphical_abstract.png")
-    if ga_pdf.is_file():
-        shutil.copy2(ga_pdf, out / "graphical_abstract.pdf")
+    # Elsevier asks for each figure as a separate file with a logical name
+    # (Figure_1, Figure_2, ...), numbered in order of appearance.
+    upload = out / "figures_for_upload"
+    if upload.exists():
+        shutil.rmtree(upload)
+    upload.mkdir(parents=True)
+    order = []
+    for name in re.findall(r"\\includegraphics(?:\[[^\]]*\])?\{(figures/[^}]+)\}", tex):
+        if name not in order:
+            order.append(name)
+    for i, name in enumerate(order, start=1):
+        shutil.copy2(ROOT / name, upload / f"Figure_{i}{Path(name).suffix}")
+
+    # Highlights must be a separate *editable* file with "highlights" in its
+    # name; a Word copy is made from the Markdown source with quarto's bundled pandoc.
+    highlights_md = out / "highlights.md"
+    if highlights_md.is_file():
+        subprocess.run(
+            ["quarto", "pandoc", str(highlights_md), "-o", str(out / "highlights.docx")],
+            check=True, cwd=ROOT, shell=(sys.platform == "win32"),
+        )
 
     if verify:
         verify_standalone(latex)

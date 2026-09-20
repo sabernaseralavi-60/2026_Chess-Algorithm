@@ -14,7 +14,7 @@ format:
 
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-No funding was received for conducting this study.
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
 
 **Authors**
 
