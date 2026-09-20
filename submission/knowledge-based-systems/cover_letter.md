@@ -31,7 +31,7 @@ Second, in the course of validating the benchmark study we ran a two-library dat
 
 The work is evaluated on six classical functions in 30 dimensions, on all 29 usable CEC-2017 functions, on CEC-2022 at both official dimensionalities, on seven constrained engineering design problems, and on two transportation decision problems: arterial signal coordination and continuous berth allocation. These application studies show the method operating on the kind of decision-support problem in which knowledge-based optimization is used in practice.
 
-All source code, experiment scripts, raw results and manuscript sources are openly available at <https://github.com/sabernaseralavi-60/2026_Chess-Algorithm>. Random seeds are fixed throughout, and every number reported in the paper corresponds to a committed output in that repository.
+All source code, experiment scripts, raw results and manuscript sources are openly available at <https://github.com/sabernaseralavi-60/2026_Chess-Algorithm> and archived on Zenodo (<https://doi.org/10.5281/zenodo.22854043>). Random seeds are fixed throughout, and every number reported in the paper corresponds to a committed output in that repository.
 
 We confirm that this manuscript is original, has not been published previously, and is not under consideration for publication elsewhere. All authors have read and approved the submitted version and declare no competing interests.
 

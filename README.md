@@ -7,6 +7,8 @@ Seyedali Mirjalili (Torrens University Australia)
 
 **Status:** being submitted to *Knowledge-Based Systems* (Elsevier).
 
+[![DOI](https://zenodo.org/badge/1288348766.svg)](https://doi.org/10.5281/zenodo.22854043)
+
 ## 📖 Where to read the paper
 
 | Output | Online | Local build |
