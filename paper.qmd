@@ -7,13 +7,16 @@ author:
     affiliations:
       - id: uk
         name: "Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman"
+        address: "Pajoohesh Square"
         city: Kerman
+        postal-code: "76169-14111"
         country: Iran
   - name: Seyedali Mirjalili
     affiliations:
       - id: torrens
         name: "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia"
-        city: Brisbane
+        address: "90 Bowen Terrace, Fortitude Valley"
+        city: "Brisbane QLD 4006"
         country: Australia
 date: 2026-07-04
 keywords:
@@ -94,8 +97,8 @@ format:
 
 ::: {.content-hidden when-meta="elsevier-submission"}
 ::: {.content-visible when-format="pdf"}
-| ^1^ *Seyedsaber Naseralavi (corresponding author,* `saber_naseralavi@uk.ac.ir`*), Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran.*
-| ^2^ *Seyedali Mirjalili, Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia.*
+| ^1^ *Seyedsaber Naseralavi (corresponding author,* `saber_naseralavi@uk.ac.ir`*), Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Pajoohesh Square, Kerman 76169-14111, Iran.*
+| ^2^ *Seyedali Mirjalili, Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, 90 Bowen Terrace, Fortitude Valley, Brisbane QLD 4006, Australia.*
 | *An HTML version of this article, together with all code and data, is available at* <https://sabernaseralavi-60.github.io/2026_Chess-Algorithm/>*.*
 :::
 
@@ -595,7 +598,7 @@ We evaluate CA (@sec-adaptive) and its non-adaptive ablation CA-static against s
 
 ## Data integrity: auditing the reference implementation {#sec-opfunu-audit}
 
-CEC-2017 was accessed through `opfunu` v1.0.1, a third-party Python port of the official suite, and two independent checks were applied before any result was trusted. First, every candidate function was evaluated at the library's own reported global optimizer $\mathbf{x}^{*}$, requiring $|f(\mathbf{x}^{*})-f^{*}| \le 10^{-6}\max(1,|f^{*}|)$. This check is necessary but not sufficient, since it verifies the function at one point and says nothing about the rest of the domain. Second, we required the landscape to be discriminative: F5 (Shifted-and-Rotated Schaffer F7) passed the first check exactly, with $f(\mathbf{x}^{*})=f^{*}=500.0$, yet random samples spanning the entire search box returned values between $500.15$ and $500.55$, a surface so nearly flat that no optimizer, ours or any competitor's, could extract a meaningful gradient from it.
+CEC-2017 was accessed through `opfunu` v1.0.1 [@vanthieu2024opfunu], a third-party Python port of the official suite, and two independent checks were applied before any result was trusted. First, every candidate function was evaluated at the library's own reported global optimizer $\mathbf{x}^{*}$, requiring $|f(\mathbf{x}^{*})-f^{*}| \le 10^{-6}\max(1,|f^{*}|)$. This check is necessary but not sufficient, since it verifies the function at one point and says nothing about the rest of the domain. Second, we required the landscape to be discriminative: F5 (Shifted-and-Rotated Schaffer F7) passed the first check exactly, with $f(\mathbf{x}^{*})=f^{*}=500.0$, yet random samples spanning the entire search box returned values between $500.15$ and $500.55$, a surface so nearly flat that no optimizer, ours or any competitor's, could extract a meaningful gradient from it.
 
 A function can pass both checks and still be broken elsewhere in the domain. Five further functions were caught only empirically, during optimization itself, because at least one algorithm in the roster, and in the worst cases nearly every algorithm including the weakest, returned a best-of-30-runs value that is impossible by definition under a correct $f^{*}$. Four surfaced in the original six-algorithm runs. A fifth, F16, surfaced only once the stronger eight-algorithm roster was added, with CMA-ES locating points $78$ units below the claimed optimum, which illustrates why stronger baselines also strengthen data auditing. @tbl-opfunu-audit collects the evidence for all six defective labels; the defective raw numbers are committed in the repository (`results/cec2017_opfunu_defect_evidence.csv`) rather than quietly dropped.
 

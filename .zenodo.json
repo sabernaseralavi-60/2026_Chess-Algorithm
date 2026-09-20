@@ -1,0 +1,25 @@
+{
+  "title": "The Chess Algorithm: source code, experiment scripts and results",
+  "upload_type": "software",
+  "description": "Source code, experiment scripts, raw results and manuscript sources accompanying the paper \"The Chess Algorithm: A Novel Metaheuristic Optimization Technique with Applications in Transportation Network Engineering\". Random seeds are fixed throughout, and every number reported in the paper corresponds to a committed output in this repository.",
+  "creators": [
+    {
+      "name": "Naseralavi, Seyedsaber",
+      "affiliation": "Department of Civil Engineering, Faculty of Engineering, Shahid Bahonar University of Kerman, Kerman, Iran"
+    },
+    {
+      "name": "Mirjalili, Seyedali",
+      "affiliation": "Centre for Artificial Intelligence Research and Optimization, Torrens University Australia, Brisbane, Australia"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "metaheuristic optimization",
+    "chess algorithm",
+    "CEC benchmark suites",
+    "engineering design optimization",
+    "traffic signal timing",
+    "berth allocation"
+  ],
+  "access_right": "open"
+}
